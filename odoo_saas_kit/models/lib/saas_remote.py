@@ -172,7 +172,7 @@ class odoo_remote_container:
             ssh_obj = self.login_remote()
             if not self.execute_on_remote_shell(ssh_obj,cmd):
                 return False
-            cmd = "cp %s %s/odoo-server.conf"%(self.odoo_config+"/"+conf_file,path)
+            cmd = "cp %s %s/odoo.conf"%(self.odoo_config+"/"+conf_file,path)
             if self.execute_on_remote_shell(ssh_obj,cmd):
                 self.response['path'] = path
                 return path
@@ -239,13 +239,13 @@ class odoo_remote_container:
             if lport == False:
                 return False
 
-            path = self.mkdir_OdooConfig(name, "odoo-server.conf") #Mounting the odoo.conf file. Should ask user for the location.Assuming /root/Odoo/config/$name for now.
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo-server.conf","dbfilter = %s"%db) 
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo-server.conf","db_user = %s"%self.db_user) 
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo-server.conf","admin_passwd = %s"%self.container_master) 
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo-server.conf","db_host = %s"%self.db_host) 
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo-server.conf","db_port = %s"%self.db_port) 
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo-server.conf","db_password = %s"%self.db_password) 
+            path = self.mkdir_OdooConfig(name, "odoo.conf") #Mounting the odoo.conf file. Should ask user for the location.Assuming /root/Odoo/config/$name for now.
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","dbfilter = %s"%db) 
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_user = %s"%self.db_user) 
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","admin_passwd = %s"%self.container_master) 
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_host = %s"%self.db_host) 
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_port = %s"%self.db_port) 
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_password = %s"%self.db_password) 
             extra_path = self.mkdir_mnt_extra_addons(name)
             _logger.info("FiLES CREATED AS NEEDED")
             _logger.info("%r %r"%(path,extra_path))
@@ -471,11 +471,11 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
         try:
             path = OdooObject.mkdir_OdooConfig(OdooObject.odoo_template,"odoo-template.conf") #Mounting the odoo.conf file. Should ask user for the location.Assuming /root/Odoo/config/$name for now. 
             extra_path = OdooObject.mkdir_mnt_extra_addons(OdooObject.odoo_template)
-            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo-server.conf","db_user = %s"%OdooObject.db_user) 
-            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo-server.conf","admin_passwd = %s"%OdooObject.template_master) 
-            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo-server.conf","db_port = %s"%OdooObject.db_port) 
-            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo-server.conf","db_host = %s"%OdooObject.db_host) 
-            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo-server.conf","db_password = %s"%OdooObject.db_password)
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_user = %s"%OdooObject.db_user) 
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","admin_passwd = %s"%OdooObject.template_master) 
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_port = %s"%OdooObject.db_port) 
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_host = %s"%OdooObject.db_host) 
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_password = %s"%OdooObject.db_password)
 
             OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port , 8071:OdooObject.template_odoo_lport }, tty = True,restart_policy={"Name":"unless-stopped"}) #Start the container
             _logger.info("Let's give Odoo 2s")
