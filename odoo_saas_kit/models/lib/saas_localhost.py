@@ -230,7 +230,7 @@ class odoo_container:
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_port = %s"%self.db_port) 
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_password = %s"%self.db_password) 
             extra_path = self.mkdir_mnt_extra_addons(name)
-            self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"}) #Start the container
+            self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%name)
             if not self.wait_for_http("http://localhost:%s"%port, timeout=120, interval=3):
                 raise Exception("Odoo container %s did not become ready in time"%name)
@@ -477,7 +477,7 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_host = %s"%OdooObject.db_host) 
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_password = %s"%OdooObject.db_password)
 
-            OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"}) #Start the container
+            OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%OdooObject.odoo_template)
             if not OdooObject.wait_for_http("http://localhost:%s"%OdooObject.template_odoo_port, timeout=120, interval=3):
                 raise Exception("Odoo container %s did not become ready in time"%OdooObject.odoo_template)
