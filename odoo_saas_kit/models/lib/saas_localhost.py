@@ -243,8 +243,23 @@ class odoo_container:
 
     def add_config_paramenter(self,file_path,value):
         try:
-            with open(file_path,"a") as config_file:
-                config_file.write(str(value)+"\n")
+            key = str(value).split("=")[0].strip()
+            lines = []
+            if os.path.exists(file_path):
+                with open(file_path,"r") as config_file:
+                    lines = config_file.readlines()
+            new_lines = []
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith(";") or stripped.startswith("#") or "=" not in stripped:
+                    new_lines.append(line)
+                    continue
+                if stripped.split("=")[0].strip() == key:
+                    continue  # drop the old definition, the new value replaces it below
+                new_lines.append(line)
+            new_lines.append(str(value)+"\n")
+            with open(file_path,"w") as config_file:
+                config_file.writelines(new_lines)
         except Exception as e:
             _logger.error("Error appneding to file %r",e)
                 

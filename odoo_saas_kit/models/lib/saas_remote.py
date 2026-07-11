@@ -263,6 +263,9 @@ class odoo_remote_container:
     def add_config_paramenter(self,file_path,value):
         try:
             ssh_obj =  self.login_remote()
+            key = str(value).split("=")[0].strip()
+            remove_cmd = "sed -i '/^[[:space:]]*%s[[:space:]]*=/d' %s"%(key,file_path)
+            self.execute_on_remote_shell(ssh_obj,remove_cmd)
             cmd = "echo \"%s\" >> %s"%(value,file_path)
             return self.execute_on_remote_shell(ssh_obj,cmd)
         except Exception as e:
