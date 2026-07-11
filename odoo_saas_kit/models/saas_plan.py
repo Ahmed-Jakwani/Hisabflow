@@ -363,7 +363,7 @@ class SaasPlans(models.Model):
                 response = install_module.main(dict(
                     db_name=self.db_template,
                     modules=modules,
-                    version='17.0',
+                    version='19.0',
                     config_path = get_module_resource('odoo_saas_kit'),
                     login=login,
                     password=password))

@@ -30,7 +30,7 @@ except ImportError as e:
     _logger.info("erppeek library not installed!!")
    
 class odoo_container:
-    def  __init__(self,db="dummy",odoo_image="odoo:12.5",odoo_config = None,host_server = None, db_server = None, version = "17.0"):
+    def  __init__(self,db="dummy",odoo_image="odoo:12.5",odoo_config = None,host_server = None, db_server = None, version = "19.0"):
 #        self.odoo_image = odoo_image
         self.location = odoo_config
         self.remote_host = host_server['host']
@@ -349,7 +349,7 @@ def main(context=None):
     db = context.get("db_name")
     db_template = context.get("db_template")
     modules = context.get('modules')
-    odoo_version = context.get("version","17.0")
+    odoo_version = context.get("version","19.0")
     host_domain = context.get("host_domain")
     if odoo_version not in SAAS_ODOO_VERSIONS:
         raise Exception("Version not valid") 
@@ -417,7 +417,7 @@ def main(context=None):
     #OdooObject.write_saas_data(host_domain, OdooObject.response)
     return OdooObject.response
 
-def create_db_template(db_template=None,modules=None, config_path=None,host_server = None, db_server = None, version = "17.0"):
+def create_db_template(db_template=None,modules=None, config_path=None,host_server = None, db_server = None, version = "19.0"):
     _logger.info(locals())
 
     response = {}
