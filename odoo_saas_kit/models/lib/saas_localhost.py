@@ -456,8 +456,12 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
         except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError, Exception) as e:
             _logger.error("Odoo container with name %s couldn't be started. Error: %s"%(OdooObject.odoo_template,e))
 
-            OdooObject.remove_container(OdooObject.dclient.containers.get(OdooObject.odoo_template).id)
-            response.update({ 'status': False, 'msg': e,})
+            try:
+                OdooObject.remove_container(OdooObject.dclient.containers.get(OdooObject.odoo_template).id)
+            except docker.errors.NotFound:
+                _logger.error("Container %s was never created, skipping cleanup"%OdooObject.odoo_template)
+
+            response.update({ 'status': False, 'msg': str(e),})
             return response
 
     _logger.info("NNNNAAAA %s"%OdooObject.odoo_template)
