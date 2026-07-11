@@ -231,14 +231,30 @@ class odoo_container:
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_password = %s"%self.db_password) 
             extra_path = self.mkdir_mnt_extra_addons(name)
             self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"}) #Start the container
-            _logger.info("Let's give Odoo 2s")
-            time.sleep(2)
+            _logger.info("Waiting for Odoo container %s to become ready"%name)
+            if not self.wait_for_http("http://localhost:%s"%port, timeout=120, interval=3):
+                raise Exception("Odoo container %s did not become ready in time"%name)
             self.response['container_id'] = self.response['name']
             _logger.info("Odoo container with name %s started successfully. Hit http://localhost:%s"%(name,port))
             return { "port" : port, "longport" : lport }
         except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError, Exception) as e:
             _logger.info("Odoo container with name %s couldn't be started. Error: %s"%(name,e))
             self.remove_container(self.dclient.containers.get(self.response['name']).id)  #Deleting the container that just got created but something seemingly went wrong with it.
+        return False
+
+    def wait_for_http(self, url, timeout=120, interval=3):
+        elapsed = 0
+        while elapsed < timeout:
+            try:
+                sock_db = xmlrpc.client.ServerProxy('{}/xmlrpc/2/db'.format(url))
+                sock_db.list()
+                _logger.info("Odoo container at %s is ready after %ss"%(url, elapsed))
+                return True
+            except Exception as e:
+                _logger.info("Waiting for Odoo container at %s to become ready (%ss elapsed): %r"%(url, elapsed, e))
+                time.sleep(interval)
+                elapsed += interval
+        _logger.error("Odoo container at %s did not become ready within %ss"%(url, timeout))
         return False
 
     def add_config_paramenter(self,file_path,value):
@@ -462,8 +478,9 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_password = %s"%OdooObject.db_password)
 
             OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"}) #Start the container
-            _logger.info("Let's give Odoo 2s")
-            time.sleep(2)
+            _logger.info("Waiting for Odoo container %s to become ready"%OdooObject.odoo_template)
+            if not OdooObject.wait_for_http("http://localhost:%s"%OdooObject.template_odoo_port, timeout=120, interval=3):
+                raise Exception("Odoo container %s did not become ready in time"%OdooObject.odoo_template)
 
             NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable)
             if NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(OdooObject.template_odoo_port)), "localhost:{}".format(str(OdooObject.template_odoo_lport))):
