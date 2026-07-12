@@ -462,25 +462,24 @@ class SaasPlans(models.Model):
                 raise UserError("Error: You must delete the associated SaaS Contracts first!")
         return super(SaasPlans, self).unlink()
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """
             Added few validation
         """
-        
-        if vals.get('recurring_interval', 0) <= 0:
-            raise UserError("Default Billing Cycle can't be less than 1")
-        if vals.get('is_multi_server', False) and not vals.get('default_saas_servers_ids', False):
-            raise UserError("Select Atleast one Server in Default Saas Servers")
-        
+        for vals in vals_list:
+            if vals.get('recurring_interval', 0) <= 0:
+                raise UserError("Default Billing Cycle can't be less than 1")
+            if vals.get('is_multi_server', False) and not vals.get('default_saas_servers_ids', False):
+                raise UserError("Select Atleast one Server in Default Saas Servers")
+            if vals.get('trial_period', 0) < 0:
+                raise UserError("Complimentary Free days can't be less than 0")
 
-        if vals.get('trial_period', 0) < 0:
-            raise UserError("Complimentary Free days can't be less than 0")
-        res = super(SaasPlans, self).create(vals)
+        res = super().create(vals_list)
         for obj in res:
             if obj.name and not obj.db_template:
                 template_name = obj.name.lower().replace(" ", "_")
-                obj.db_template = "{}_tid_{}".format(template_name, res.id)
+                obj.db_template = "{}_tid_{}".format(template_name, obj.id)
         return res
 
     def write(self, vals):

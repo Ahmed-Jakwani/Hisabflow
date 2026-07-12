@@ -31,15 +31,15 @@ class PrductTemplate(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    @api.model
-    def create(self, vals):
-        template_id = vals.get('product_tmpl_id', False)
-        if template_id:
-            template_obj = self.env['product.template'].browse(template_id)
-            vals['recurring_interval'] = template_obj.saas_plan_id and template_obj.saas_plan_id.recurring_interval
-            vals['user_cost'] = template_obj.saas_plan_id and template_obj.saas_plan_id.user_cost
-        product = super(ProductProduct, self).create(vals)
-        return product
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            template_id = vals.get('product_tmpl_id')
+            if template_id:
+                template_obj = self.env['product.template'].browse(template_id)
+                vals['recurring_interval'] = template_obj.saas_plan_id.recurring_interval
+                vals['user_cost'] = template_obj.saas_plan_id.user_cost
+        return super().create(vals_list)
 
     recurring_interval = fields.Integer(string='Billing Cycle/Repeat Every',)
     is_user_pricing = fields.Boolean(string="User pricing", default=False)

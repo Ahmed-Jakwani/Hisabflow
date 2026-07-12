@@ -207,10 +207,11 @@ class SaasClient(models.Model):
             else:
                 raise UserError("Operation Failed! Unknown Error!")
 
-    @api.model
-    def create(self, vals):
-        vals['name'] = self.env['ir.sequence'].next_by_code('saas.client')
-        return super(SaasClient, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            vals['name'] = self.env['ir.sequence'].next_by_code('saas.client')
+        return super().create(vals_list)
 
     def write(self, vals):
         initial_list = self.saas_module_ids

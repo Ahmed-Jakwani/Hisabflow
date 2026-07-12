@@ -94,16 +94,20 @@ class ContractCreation(models.TransientModel):
             obj.total_cost = obj.contract_price + obj.user_billing
             _logger.info("+++11++++OBJ>TOTALCOST+++++++%s",obj.total_cost)
 
-    @api.model
-    def create(self, vals):
-        if self.user_billing:
-            vals['user_billing'] = self.saas_users * self.user_cost * self.total_cycles
-        if self.contract_price:
-            vals['contract_price'] = self.contract_rate * self.total_cycles
-        if self.total_cost:
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            total_cycles = vals.get('total_cycles', 1)
+            contract_rate = vals.get('contract_rate', 0.0)
+            user_cost = vals.get('user_cost', 0.0)
+            saas_users = vals.get('saas_users', 0)
+
+            vals['contract_price'] = contract_rate * total_cycles
+            vals['user_billing'] = (
+                saas_users * user_cost * total_cycles
+                if vals.get('per_user_pricing') else 0.0)
             vals['total_cost'] = vals['contract_price'] + vals['user_billing']
-        res = super(ContractCreation, self).create(vals)
-        return res
+        return super().create(vals_list)
     
     def write(self, vals):
         for obj in self:
