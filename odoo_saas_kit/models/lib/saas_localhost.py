@@ -396,12 +396,8 @@ class nginx_vhost:
             _logger.info("Couldn't Replace Subdomain!!")
             return False
 
-        if not self.execute_on_host_via_ssh("sudo nginx -t"):
-            _logger.info("Couldn't Validate Nginx Config!!")
-            return False
-
-        if not self.execute_on_host_via_ssh("sudo nginx -s reload"):
-            _logger.info("Couldn't Reload Nginx!!")
+        if not self.execute_on_host_via_ssh("sudo nginx -t && sudo nginx -s reload"):
+            _logger.info("Couldn't Validate/Reload Nginx!!")
             return False
 
         return True 
