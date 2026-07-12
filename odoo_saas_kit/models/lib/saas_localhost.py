@@ -28,7 +28,12 @@ try:
     import erppeek
 except ImportError as e:
     _logger.info("erppeek library not installed!!")
-   
+
+try:
+    import paramiko
+except ImportError as e:
+    _logger.info("Paramiko library not installed!!")
+
 class odoo_container:
     def  __init__(self,db="dummy",odoo_image="odoo:12.5",odoo_config = None,host_server = None, db_server = None, version = "19.0"):
 #        self.odoo_image = odoo_image
@@ -61,6 +66,10 @@ class odoo_container:
         self.odoo_template = parser.get("options","odoo_template_v"+version)
         self.data_dir = parser.get("options","data_dir_path")
         self.odoo_image = parser.get("options","odoo_image_v"+version)
+        self.nginx_ssh_host = parser.get("options","nginx_ssh_host", fallback="host.docker.internal")
+        self.nginx_ssh_port = parser.getint("options","nginx_ssh_port", fallback=22)
+        self.nginx_ssh_user = parser.get("options","nginx_ssh_user", fallback=None)
+        self.nginx_ssh_key = parser.get("options","nginx_ssh_key", fallback=None)
         self.response['odoo_image'] = self.odoo_image
         self.ports_in_use = { self.template_odoo_port,  self.template_odoo_lport }
         _logger.info("Reading Conf from %r:- Done"%path)
@@ -321,10 +330,14 @@ class odoo_container:
 
 class nginx_vhost:
 
-    def __init__(self,vhostTemplate="vhosttemplatehttp.txt",sitesEnable = '/var/lib/odoo/Odoo-SAAS_Data/docker_vhosts/',sitesAvailable = '/etc/nginx/sites-available/'):
+    def __init__(self,vhostTemplate="vhosttemplatehttp.txt",sitesEnable = '/var/lib/odoo/Odoo-SAAS_Data/docker_vhosts/',sitesAvailable = '/etc/nginx/sites-available/', ssh_host=None, ssh_port=22, ssh_user=None, ssh_key=None):
         self.vhostTemplate=vhostTemplate
         self.sitesEnable=sitesEnable
         self.sitesAvailable=sitesAvailable
+        self.ssh_host = ssh_host
+        self.ssh_port = ssh_port
+        self.ssh_user = ssh_user
+        self.ssh_key = ssh_key
 
     def execute_on_shell(self,cmd):
         try:
@@ -333,6 +346,27 @@ class nginx_vhost:
             return True
         except Exception as e:
             _logger.error("+++++++++++++ERRROR++++%r",e)
+            return False
+
+    def execute_on_host_via_ssh(self,cmd):
+        """
+        nginx runs on the host, not inside this container, so reload/validation
+        has to happen over SSH rather than local subprocess.
+        """
+        if not (self.ssh_host and self.ssh_user and self.ssh_key):
+            _logger.error("Nginx SSH settings not configured (nginx_ssh_host/user/key in saas.conf)")
+            return False
+        try:
+            ssh_obj = paramiko.SSHClient()
+            ssh_obj.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_obj.connect(hostname=self.ssh_host, port=self.ssh_port, username=self.ssh_user, key_filename=self.ssh_key, timeout=15)
+            stdin, stdout, stderr = ssh_obj.exec_command(cmd)
+            exit_status = stdout.channel.recv_exit_status()
+            _logger.info("-----------SSH COMMAND RESULT--------%r %r", stdout.read(), stderr.read())
+            ssh_obj.close()
+            return exit_status == 0
+        except Exception as e:
+            _logger.error("+++++++++++++ERRROR (nginx ssh)++++%r",e)
             return False
 
     def domainmapping(self,subdomain,backend,longbackend):
@@ -362,12 +396,12 @@ class nginx_vhost:
             _logger.info("Couldn't Replace Subdomain!!")
             return False
 
-        if not self.execute_on_shell("sudo nginx -t"):
-            _logger.info("Couldn't Replace Subdomain!!")
+        if not self.execute_on_host_via_ssh("sudo nginx -t"):
+            _logger.info("Couldn't Validate Nginx Config!!")
             return False
 
-        if not self.execute_on_shell("sudo nginx -s reload"):
-            _logger.info("Couldn't Replace Subdomain!!")
+        if not self.execute_on_host_via_ssh("sudo nginx -s reload"):
+            _logger.info("Couldn't Reload Nginx!!")
             return False
 
         return True 
@@ -432,7 +466,7 @@ def main(context=None):
 
     _logger.info("-----------MAPPING DOMAIN--------")
 
-    NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable)
+    NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable, ssh_host=OdooObject.nginx_ssh_host, ssh_port=OdooObject.nginx_ssh_port, ssh_user=OdooObject.nginx_ssh_user, ssh_key=OdooObject.nginx_ssh_key)
     resp = NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(port['port'])),"localhost:{}".format(str(port['longport'])))
 
     _logger.info("----------MAPPING RESULT--------%r", resp)
@@ -482,7 +516,7 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             if not OdooObject.wait_for_http("http://localhost:%s"%OdooObject.template_odoo_port, timeout=120, interval=3):
                 raise Exception("Odoo container %s did not become ready in time"%OdooObject.odoo_template)
 
-            NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable)
+            NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable, ssh_host=OdooObject.nginx_ssh_host, ssh_port=OdooObject.nginx_ssh_port, ssh_user=OdooObject.nginx_ssh_user, ssh_key=OdooObject.nginx_ssh_key)
             if NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(OdooObject.template_odoo_port)), "localhost:{}".format(str(OdooObject.template_odoo_lport))):
                 response['url'] = "http://{}".format(str.lower(host_domain))
         except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError, Exception) as e:
