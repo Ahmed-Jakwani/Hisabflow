@@ -7,7 +7,7 @@
 #
 #################################################################################
 
-from urllib.parse import urlparse
+from urllib.parse import urlencode
 from odoo import fields, models, api
 from odoo.exceptions import UserError, ValidationError
 from .compat import get_module_resource, is_new_id
@@ -160,38 +160,23 @@ class SaasClient(models.Model):
 
     def login_to_client_instance(self):
         for obj in self:
-            host_server, db_server = obj.saas_contract_id.server_id.get_server_details()
-            self.print_logs('info', 'calling query script', 162)
-            response = query.get_credentials(
-                obj.database_name,
-                host_server=host_server,
-                db_server=db_server)
-            if response.get('status'):
-                response = response.get('result')
-                login = response[0][0]
-                password = response[0][1]
-                login_url = None
-                if not obj.login_with_custom_domain:
-                    login_url = "{}/saas/login?db={}&login={}&passwd={}".format(obj.client_url, obj.database_name, login, password)
-                else:
-                    active_domains = obj.saas_contract_id.custom_domain_ids and obj.saas_contract_id.custom_domain_ids.filtered(lambda r: r.status == "active")
-                    custom_domain = active_domains[-1] if active_domains else None
-                    _logger.info("======== active_domains ====== %r", active_domains)
-                    if custom_domain:
-                        login_url = "http://{}/saas/login?db={}&login={}&passwd={}".format(custom_domain.name, obj.database_name, login, password)
-                        _logger.info("========== login url =========== %r", login_url)
-                    else:
-                        login_url = "{}/saas/login?db={}&login={}&passwd={}".format(obj.client_url, obj.database_name, login, password)
-                        # raise UserError("Custom domain doesn't exist for this instance. Please create a custom domain first and try again.")
-                    
-                return {
-                    'type': 'ir.actions.act_url',
-                    'url': login_url,
-                    'target': 'new',
-                }
-            else:
-                self.print_logs('error', response.get('message'), 162)
-                raise UserError(response.get('message'))
+            login_base_url = obj.client_url
+            if obj.login_with_custom_domain:
+                active_domains = obj.saas_contract_id.custom_domain_ids.filtered(
+                    lambda domain: domain.status == "active")
+                if active_domains:
+                    login_base_url = "http://{}".format(active_domains[-1].name)
+
+            if not login_base_url:
+                raise UserError("The client instance does not have a login URL yet.")
+
+            login_url = "{}/web/login?{}".format(
+                login_base_url.rstrip('/'), urlencode({'db': obj.database_name}))
+            return {
+                'type': 'ir.actions.act_url',
+                'url': login_url,
+                'target': 'new',
+            }
 
     def stop_client(self):
         for obj in self:

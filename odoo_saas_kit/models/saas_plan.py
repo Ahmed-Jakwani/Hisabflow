@@ -6,7 +6,7 @@
 #   License URL : <https://store.webkul.com/license.html/>
 #
 #################################################################################
-from urllib.parse import urlparse
+from urllib.parse import urlencode
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from . lib import containers, install_module
@@ -265,36 +265,24 @@ class SaasPlans(models.Model):
 
     def login_to_db_template(self):
         """
-            Called from the Login button over saas plan
-            Redict to the Plan instance to login in to template database
+            Open the selected template database's standard Odoo login page.
+
+            ``/saas/login`` was provided by the legacy ``wk_saas_tool`` addon.
+            It is not available in the Odoo 19 template image.  Using Odoo's
+            database-aware login route also avoids exposing a password hash in
+            the URL, browser history, and proxy logs.
         """
 
         for obj in self:
-            host_server, db_server = obj.server_id.get_server_details()
-            self.print_logs('info', 'calling get_credentails', '269')
-            response = query.get_credentials(
-                obj.db_template,
-                host_server=host_server,
-                db_server=db_server)
-            if response.get('status'):
-                response = response.get('result')
-                login = response[0][0]
-                password = response[0][1]
-                template_host = "db{}_templates.{}".format(
-                    SAAS_ODOO_VERSION.split('.', 1)[0], obj.saas_base_url)
-                login_url = "http://{}/saas/login?db={}&login={}&passwd={}".format(
-                    template_host, obj.db_template, login, password)
-
-
-                _logger.info("$$$$$$$$$$$$$$%r", login_url)
-                return {
-                    'type': 'ir.actions.act_url',
-                    'url': login_url,
-                    'target': 'new',
-                }
-            else:
-                self.print_logs('error', 'get empty response from get_credentails', '288')
-                raise UserError("ERR001: "+str(response.get('message')))
+            template_host = "db{}_templates.{}".format(
+                SAAS_ODOO_VERSION.split('.', 1)[0], obj.saas_base_url)
+            login_url = "http://{}/web/login?{}".format(
+                template_host, urlencode({'db': obj.db_template}))
+            return {
+                'type': 'ir.actions.act_url',
+                'url': login_url,
+                'target': 'new',
+            }
 
     def restart_db_template(self):
         """
