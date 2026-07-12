@@ -919,12 +919,17 @@ class SaasContract(models.Model):
         for contract in valid_contracts:
             contract.generate_invoice()
 
-    @api.model
-    def create(self, vals):
-        vals['name'] = self.env['ir.sequence'].next_by_code('saas.contract')
-        res = super(SaasContract,self).create(vals)
-        res.message_subscribe(partner_ids=[res.partner_id.id])
-        return res
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Create contracts using Odoo 19's batch-create API."""
+        for vals in vals_list:
+            vals['name'] = self.env['ir.sequence'].next_by_code('saas.contract')
+
+        contracts = super().create(vals_list)
+        for contract in contracts:
+            if contract.partner_id:
+                contract.message_subscribe(partner_ids=[contract.partner_id.id])
+        return contracts
     
     @api.model
     def hold_contract(self):
