@@ -20,6 +20,7 @@ from . lib import saas
 from . lib import query
 from . lib import containers
 from . lib import client
+from .static_saas_kit import SAAS_ODOO_VERSION
 
 _logger = logging.getLogger(__name__)
 
@@ -48,8 +49,8 @@ class SaasClient(models.Model):
     def _compute_addons_path(self):
         for obj in self:
             if obj.data_directory_path and not is_new_id(obj.id):
-                obj.addons_path = "{}/addons/17.0".format(
-                    obj.data_directory_path)
+                obj.addons_path = "{}/addons/{}".format(
+                    obj.data_directory_path, SAAS_ODOO_VERSION)
             else:
                 obj.addons_path = ""
 

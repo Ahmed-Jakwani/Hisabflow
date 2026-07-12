@@ -20,6 +20,7 @@ import docker
 import base64
 import re
 from . lib import client
+from .static_saas_kit import SAAS_ODOO_VERSION
 
 
 _logger = logging.getLogger(__name__)
@@ -279,7 +280,10 @@ class SaasPlans(models.Model):
                 response = response.get('result')
                 login = response[0][0]
                 password = response[0][1]
-                login_url = "http://db17_templates.{}/saas/login?db={}&login={}&passwd={}".format(obj.saas_base_url,obj.db_template, login, password)
+                template_host = "db{}_templates.{}".format(
+                    SAAS_ODOO_VERSION.split('.', 1)[0], obj.saas_base_url)
+                login_url = "http://{}/saas/login?db={}&login={}&passwd={}".format(
+                    template_host, obj.db_template, login, password)
 
 
                 _logger.info("$$$$$$$$$$$$$$%r", login_url)

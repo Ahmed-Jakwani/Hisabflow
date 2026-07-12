@@ -4,13 +4,14 @@ import os,subprocess,shutil
 import logging
 from configparser import ConfigParser
 import paramiko
+from ..static_saas_kit import SAAS_ODOO_VERSION
 
 nginx_vhost = "/var/lib/odoo/Odoo-SAAS-Data/docker_vhosts/"
 data_dir = "/var/lib/odoo/Odoo-SAAS-Data/"
 client_admin_passwd = "Yb32vfyRsMa7HDaG"
 template_port = 8888
 _logger = logging.getLogger(__name__)
-oversion = "17"
+oversion = SAAS_ODOO_VERSION.split('.')[0]
 class container(object):
 
     def __init__(self):
@@ -193,7 +194,7 @@ def execute_on_remote_shell(ssh_obj,command):
         _logger.error("++++++++++ERROR++++%r",e)
         return False
 
-def main(domain, port, host_server, config_path, container_id=None, db_server=None, from_drop_container=None, from_drop_db=None, version = "17"):
+def main(domain, port, host_server, config_path, container_id=None, db_server=None, from_drop_container=None, from_drop_db=None, version=SAAS_ODOO_VERSION):
     server_type = host_server['server_type']
     _logger.info("____%r++++++"%domain)
     _logger.info("____%r++++++"%container_id)
@@ -259,4 +260,3 @@ def main_plan(domain , host_server = None,  config_path = None):
     if response['db_drop']:
         response["drop_db"] = True
     return response
-
