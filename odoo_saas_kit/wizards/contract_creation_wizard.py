@@ -212,7 +212,8 @@ class ContractCreation(models.TransientModel):
                 record_id = self.env['saas.contract'].create(vals)
                 _logger.info("--------Contract--Created-------%r", record_id)
             except Exception as e:
-                _logger.info("--------Exception-While-Creating-Contract-------%r", e)
+                _logger.exception("Exception while creating SaaS contract")
+                raise UserError("Unable to create the SaaS contract: {}".format(e)) from e
             else:
                 imd = self.env['ir.model.data']
                 # action = imd._xmlid_to_res_id('odoo_saas_kit.saas_contract_action')
