@@ -226,7 +226,7 @@ class ContractCreation(models.TransientModel):
                     'name': action.name,
                     'res_id': record_id.id,
                     'type': action.type,
-                    'views': [[form_view_id, 'form'], [list_view_id, 'tree'] ],
+                    'views': [[form_view_id, 'form'], [list_view_id, 'list']],
                     'target': action.target,
                     'context': action.context,
                     'res_model': action.res_model,
