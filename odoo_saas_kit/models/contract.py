@@ -393,7 +393,6 @@ class SaasContract(models.Model):
                 zip = partner_id.zip or '',
                 country_id = partner_id.country_id and partner_id.country_id.id or False,
                 phone = partner_id.phone or '',
-                mobile = partner_id.mobile or '',
                 email = partner_id.email or '',
                 website = partner_id.website or '',
                 signup_token=token or '',

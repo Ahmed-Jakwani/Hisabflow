@@ -327,7 +327,7 @@ class odoo_remote_container:
 
 class nginx_vhost:
 
-    def __init__(self,vhostTemplate="vhosttemplate.txt",sitesEnable = '/var/lib/odoo/Odoo-SAAS_Data/docker_vhosts/',sitesAvailable = '/etc/nginx/sites-available/'):    
+    def __init__(self,vhostTemplate="vhosttemplatehttp.txt",sitesEnable = '/var/lib/odoo/Odoo-SAAS_Data/docker_vhosts/',sitesAvailable = '/etc/nginx/sites-available/'):
         self.vhostTemplate=vhostTemplate
         self.sitesEnable=sitesEnable
         self.sitesAvailable=sitesAvailable

@@ -98,7 +98,7 @@ def update_user(database, user_id, user_data, partner_data,host_server = None, d
             return pg
         partner_id = pgX.selectQuery("Select partner_id from res_users where id = %d;"%user_id)[0][0]
     print(partner_id)
-    query = "Update res_partner set name = '%s', street = '%s', street2 = '%s', city = '%s', zip = '%s', phone = '%s', mobile = '%s', email = '%s', website = '%s', signup_token = '%s', signup_type = '%s' WHERE id =%s;"%(partner_data['name'],partner_data['street'],partner_data['street2'],partner_data['city'],partner_data['zip'],partner_data['phone'],partner_data['mobile'],partner_data['email'],partner_data['website'], partner_data['signup_token'], partner_data['signup_type'], partner_id)
+    query = "Update res_partner set name = '%s', street = '%s', street2 = '%s', city = '%s', zip = '%s', phone = '%s', email = '%s', website = '%s', signup_token = '%s', signup_type = '%s' WHERE id =%s;"%(partner_data['name'],partner_data['street'],partner_data['street2'],partner_data['city'],partner_data['zip'],partner_data['phone'],partner_data['email'],partner_data['website'], partner_data['signup_token'], partner_data['signup_type'], partner_id)
 
     with pgX as pg:
         if not pg.get('status'):
