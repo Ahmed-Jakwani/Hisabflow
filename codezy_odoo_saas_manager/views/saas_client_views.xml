@@ -1,0 +1,252 @@
+<odoo>
+    <record id="view_saas_client_list" model="ir.ui.view">
+        <field name="name">saas.client.list</field>
+        <field name="model">saas.client</field>
+        <field name="arch" type="xml">
+            <list string="SaaS Clients"
+                decoration-success="state == 'active'"
+                decoration-warning="state in ['draft', 'creating', 'suspended']"
+                decoration-danger="state == 'error'"
+                decoration-muted="subscription_state in ['expired', 'cancelled']">
+                <field name="name" />
+                <field name="customer_email" />
+                <field name="plan_id" />
+                <field name="database_name" />
+                <field name="subdomain" optional="hide" />
+                <field name="database_exists" optional="show" />
+                <field name="database_size" optional="show" />
+                <field name="subscription_state"
+                    widget="badge"
+                    decoration-success="subscription_state == 'paid'"
+                    decoration-info="subscription_state == 'trial'"
+                    decoration-danger="subscription_state == 'expired'"
+                    decoration-muted="subscription_state == 'cancelled'" />
+                <field name="trial_end_date" optional="hide" />
+                <field name="subscription_end_date" />
+                <field name="state"
+                    widget="badge"
+                    decoration-success="state == 'active'"
+                    decoration-info="state == 'creating'"
+                    decoration-warning="state in ['draft', 'suspended']"
+                    decoration-danger="state == 'error'" />
+                <field name="last_health_check" optional="hide" />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_saas_client_search" model="ir.ui.view">
+        <field name="name">saas.client.search</field>
+        <field name="model">saas.client</field>
+        <field name="arch" type="xml">
+            <search string="Search SaaS Clients">
+                <field name="name" />
+                <field name="customer_email" />
+                <field name="database_name" />
+                <field name="subdomain" />
+                <field name="plan_id" />
+
+                <filter name="filter_active" string="Active" domain="[('state', '=', 'active')]" />
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]" />
+                <filter name="filter_suspended" string="Suspended" domain="[('state', '=', 'suspended')]" />
+                <filter name="filter_error" string="Error" domain="[('state', '=', 'error')]" />
+
+                <filter name="filter_trial" string="Trial" domain="[('subscription_state', '=', 'trial')]" />
+                <filter name="filter_paid" string="Paid" domain="[('subscription_state', '=', 'paid')]" />
+                <filter name="filter_expired" string="Expired" domain="[('subscription_state', '=', 'expired')]" />
+                <filter name="filter_cancelled" string="Cancelled" domain="[('subscription_state', '=', 'cancelled')]" />
+
+                <filter name="filter_database_exists" string="Database Exists" domain="[('database_exists', '=', True)]" />
+                <filter name="filter_no_database" string="Database Missing" domain="[('database_exists', '=', False)]" />
+            </search>
+        </field>
+    </record>
+
+    <record id="view_saas_client_form" model="ir.ui.view">
+        <field name="name">saas.client.form</field>
+        <field name="model">saas.client</field>
+        <field name="arch" type="xml">
+            <form string="SaaS Client">
+                <header>
+                    <button name="action_save_record"
+                        type="object"
+                        string="Save"
+                        class="btn-primary" />
+
+                    <button name="action_create_database"
+                        type="object"
+                        string="Create Database"
+                        class="btn-primary"
+                        invisible="state not in ['draft', 'error']" />
+
+                    <button name="action_check_database"
+                        type="object"
+                        string="Check Database"
+                        class="btn-secondary" />
+
+                    <button name="action_health_check"
+                        type="object"
+                        string="Health Check"
+                        class="btn-secondary" />
+
+                    <button name="action_check_subscription"
+                        type="object"
+                        string="Check Subscription"
+                        class="btn-secondary" />
+
+                    <button name="action_open_database"
+                        type="object"
+                        string="Open Database"
+                        class="btn-primary"
+                        invisible="state not in ['active', 'suspended']" />
+
+                    <button name="action_backup_database"
+                        type="object"
+                        string="Backup Database"
+                        class="btn-secondary"
+                        invisible="state != 'active' or not allow_backup" />
+
+                    <button name="action_restore_last_backup"
+                        type="object"
+                        string="Restore Backup"
+                        class="btn-secondary"
+                        invisible="not backup_path or not allow_restore" />
+
+                    <button name="action_suspend_database"
+                        type="object"
+                        string="Suspend"
+                        class="btn-secondary"
+                        invisible="state != 'active'" />
+
+                    <button name="action_activate_database"
+                        type="object"
+                        string="Activate"
+                        class="btn-primary"
+                        invisible="state != 'suspended'" />
+
+                    <button name="action_renew_subscription"
+                        type="object"
+                        string="Renew Subscription"
+                        class="btn-secondary"
+                        invisible="subscription_state == 'cancelled'" />
+
+                    <field name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,creating,active,suspended,error" />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" />
+                        <h1>
+                            <field name="name" placeholder="Client name" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Client Information">
+                            <field name="customer_email" placeholder="client@example.com" />
+                            <field name="plan_id" options="{'no_create_edit': True}" />
+                            <field name="allowed_users" />
+                            <field name="subscription_state"
+                                widget="badge"
+                                decoration-success="subscription_state == 'paid'"
+                                decoration-info="subscription_state == 'trial'"
+                                decoration-danger="subscription_state == 'expired'"
+                                decoration-muted="subscription_state == 'cancelled'" />
+                        </group>
+
+                        <group string="Database Information">
+                            <field name="database_name" placeholder="client_database_name" />
+                            <field name="subdomain" placeholder="client-subdomain" />
+                            <field name="database_url" readonly="1" widget="url" />
+                            <field name="database_exists" readonly="1" />
+                        </group>
+                    </group>
+
+                    <group string="Plan Settings">
+                        <group>
+                            <field name="billing_cycle" readonly="1" />
+                            <field name="storage_limit_mb" readonly="1" />
+                            <field name="allow_backup" readonly="1" />
+                        </group>
+
+                        <group>
+                            <field name="allow_restore" readonly="1" />
+                            <field name="auto_suspend_on_expiry" readonly="1" />
+                            <field name="grace_period_days" readonly="1" />
+                        </group>
+                    </group>
+
+                    <group string="Important Dates">
+                        <group>
+                            <field name="start_date" />
+                            <field name="trial_end_date" />
+                            <field name="subscription_end_date" />
+                        </group>
+                        <group>
+                            <field name="last_health_check" readonly="1" />
+                            <field name="backup_date" readonly="1" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Database Health" name="database_health">
+                            <group>
+                                <group>
+                                    <field name="database_size" readonly="1" />
+                                    <field name="health_message" readonly="1" nolabel="1"
+                                        placeholder="Run health check to show database status." />
+                                </group>
+                                <group>
+                                    <field name="backup_path" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Operation Logs" name="operation_logs">
+                            <field name="log_ids" readonly="1" nolabel="1">
+                                <list string="Operation Logs"
+                                    decoration-success="status == 'success'"
+                                    decoration-warning="status == 'warning'"
+                                    decoration-danger="status == 'failed'">
+                                    <field name="log_date" />
+                                    <field name="operation"
+                                        widget="badge"
+                                        decoration-info="operation in ['check_database', 'health_check', 'check_subscription']"
+                                        decoration-success="operation in ['create_database', 'activate_database', 'renew_subscription', 'restore_database']"
+                                        decoration-warning="operation in ['backup_database', 'suspend_database']"
+                                        decoration-danger="operation == 'error'" />
+                                    <field name="status"
+                                        widget="badge"
+                                        decoration-success="status == 'success'"
+                                        decoration-warning="status == 'warning'"
+                                        decoration-danger="status == 'failed'" />
+                                    <field name="database_name" />
+                                    <field name="user_id" />
+                                    <field name="message" />
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Internal Notes" name="internal_notes">
+                            <field name="internal_notes" nolabel="1"
+                                placeholder="Write internal notes about this client." />
+                        </page>
+                    </notebook>
+
+                    <group string="Error Details" invisible="not error_message">
+                        <field name="error_message" readonly="1" nolabel="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_saas_client" model="ir.actions.act_window">
+        <field name="name">SaaS Clients</field>
+        <field name="res_model">saas.client</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_saas_client_search" />
+        <field name="context">{'search_default_filter_active': 1}</field>
+    </record>
+</odoo>

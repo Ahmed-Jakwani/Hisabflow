@@ -1,0 +1,100 @@
+<odoo>
+    <record id="view_saas_log_list" model="ir.ui.view">
+        <field name="name">saas.log.list</field>
+        <field name="model">saas.log</field>
+        <field name="arch" type="xml">
+            <list string="SaaS Logs"
+                create="0"
+                edit="0"
+                delete="0"
+                decoration-success="status == 'success'"
+                decoration-warning="status == 'warning'"
+                decoration-danger="status == 'failed'">
+                <field name="log_date" />
+                <field name="client_id" />
+                <field name="database_name" />
+                <field name="operation"
+                    widget="badge"
+                    decoration-info="operation in ['check_database', 'health_check', 'check_subscription']"
+                    decoration-success="operation in ['create_database', 'activate_database', 'renew_subscription', 'restore_database']"
+                    decoration-warning="operation in ['backup_database', 'suspend_database']"
+                    decoration-danger="operation == 'error'" />
+                <field name="status"
+                    widget="badge"
+                    decoration-success="status == 'success'"
+                    decoration-warning="status == 'warning'"
+                    decoration-danger="status == 'failed'" />
+                <field name="user_id" />
+                <field name="message" />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_saas_log_search" model="ir.ui.view">
+        <field name="name">saas.log.search</field>
+        <field name="model">saas.log</field>
+        <field name="arch" type="xml">
+            <search string="Search SaaS Logs">
+                <field name="client_id" />
+                <field name="database_name" />
+                <field name="operation" />
+                <field name="status" />
+                <field name="user_id" />
+                <field name="message" />
+
+                <filter name="filter_success" string="Success" domain="[('status', '=', 'success')]" />
+                <filter name="filter_warning" string="Warning" domain="[('status', '=', 'warning')]" />
+                <filter name="filter_failed" string="Failed" domain="[('status', '=', 'failed')]" />
+                <filter name="filter_backup" string="Backup Database" domain="[('operation', '=', 'backup_database')]" />
+                <filter name="filter_restore" string="Restore Database" domain="[('operation', '=', 'restore_database')]" />
+                <filter name="filter_subscription" string="Check Subscription" domain="[('operation', '=', 'check_subscription')]" />
+            </search>
+        </field>
+    </record>
+
+    <record id="view_saas_log_form" model="ir.ui.view">
+        <field name="name">saas.log.form</field>
+        <field name="model">saas.log</field>
+        <field name="arch" type="xml">
+            <form string="SaaS Log" create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="operation" readonly="1" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Log Information">
+                            <field name="client_id" readonly="1" />
+                            <field name="database_name" readonly="1" />
+                            <field name="operation" readonly="1" />
+                        </group>
+
+                        <group string="Status Information">
+                            <field name="status" readonly="1"
+                                widget="badge"
+                                decoration-success="status == 'success'"
+                                decoration-warning="status == 'warning'"
+                                decoration-danger="status == 'failed'" />
+                            <field name="user_id" readonly="1" />
+                            <field name="log_date" readonly="1" />
+                        </group>
+                    </group>
+
+                    <group string="Message">
+                        <field name="message" readonly="1" nolabel="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+<record id="action_saas_log" model="ir.actions.act_window">
+    <field name="name">SaaS Logs</field>
+    <field name="res_model">saas.log</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="view_saas_log_search" />
+    <field name="context">{}</field>
+</record>
+</odoo>

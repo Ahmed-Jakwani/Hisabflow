@@ -1,0 +1,104 @@
+<odoo>
+    <record id="view_saas_plan_list" model="ir.ui.view">
+        <field name="name">saas.plan.list</field>
+        <field name="model">saas.plan</field>
+        <field name="arch" type="xml">
+            <list string="SaaS Plans"
+                decoration-muted="active == False">
+                <field name="name" />
+                <field name="code" />
+                <field name="billing_cycle" />
+                <field name="monthly_price" />
+                <field name="trial_days" />
+                <field name="template_database" />
+                <field name="max_users" />
+                <field name="storage_limit_mb" />
+                <field name="allow_backup" />
+                <field name="allow_restore" />
+                <field name="active" />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_saas_plan_search" model="ir.ui.view">
+        <field name="name">saas.plan.search</field>
+        <field name="model">saas.plan</field>
+        <field name="arch" type="xml">
+            <search string="Search SaaS Plans">
+                <field name="name" />
+                <field name="code" />
+                <field name="template_database" />
+
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]" />
+                <filter name="filter_inactive" string="Inactive" domain="[('active', '=', False)]" />
+                <filter name="filter_allow_backup" string="Allow Backup" domain="[('allow_backup', '=', True)]" />
+                <filter name="filter_allow_restore" string="Allow Restore" domain="[('allow_restore', '=', True)]" />
+            </search>
+        </field>
+    </record>
+
+    <record id="view_saas_plan_form" model="ir.ui.view">
+        <field name="name">saas.plan.form</field>
+        <field name="model">saas.plan</field>
+        <field name="arch" type="xml">
+            <form string="SaaS Plan">
+                <header>
+                    <button name="action_save_record"
+                        type="object"
+                        string="Save"
+                        class="btn-primary" />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" />
+                        <h1>
+                            <field name="name" placeholder="Plan name" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Plan Information">
+                            <field name="code" />
+                            <field name="billing_cycle" />
+                            <field name="monthly_price" />
+                            <field name="trial_days" />
+                        </group>
+
+                        <group string="Database Template">
+                            <field name="template_database" />
+                            <field name="max_users" />
+                            <field name="storage_limit_mb" />
+                            <field name="active" />
+                        </group>
+                    </group>
+
+                    <group string="Plan Limits">
+                        <group>
+                            <field name="allow_backup" />
+                            <field name="allow_restore" />
+                        </group>
+
+                        <group>
+                            <field name="auto_suspend_on_expiry" />
+                            <field name="grace_period_days" />
+                        </group>
+                    </group>
+
+                    <group string="Description">
+                        <field name="description" nolabel="1"
+                            placeholder="Write a short description for this plan." />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_saas_plan" model="ir.actions.act_window">
+        <field name="name">SaaS Plans</field>
+        <field name="res_model">saas.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_saas_plan_search" />
+        <field name="context">{'search_default_filter_active': 1}</field>
+    </record>
+</odoo>

@@ -1,0 +1,23 @@
+<odoo>
+    <menuitem id="menu_saas_root"
+              name="SaaS"
+              sequence="10"/>
+
+    <menuitem id="menu_saas_clients"
+              name="Clients"
+              parent="menu_saas_root"
+              action="action_saas_client"
+              sequence="10"/>
+
+    <menuitem id="menu_saas_plans"
+              name="Plans"
+              parent="menu_saas_root"
+              action="action_saas_plan"
+              sequence="20"/>
+
+    <menuitem id="menu_saas_logs"
+              name="Logs"
+              parent="menu_saas_root"
+              action="action_saas_log"
+              sequence="30"/>
+</odoo>

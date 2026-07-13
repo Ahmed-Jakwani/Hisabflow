@@ -1,0 +1,802 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* saas
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-19 08:59+0000\n"
+"PO-Revision-Date: 2026-05-19 08:59+0000\n"
+"Last-Translator: habib mohammed\n"
+"Language-Team: habib mohammed\n"
+"Language: ar_001\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS"
+msgstr "SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS Client"
+msgstr "عميل SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS Clients"
+msgstr "عملاء SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS Plan"
+msgstr "باقة SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS Plans"
+msgstr "باقات SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS Operation Log"
+msgstr "سجل عمليات SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS Logs"
+msgstr "سجلات SaaS"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "SaaS: Check Subscriptions"
+msgstr "SaaS: فحص الاشتراكات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Clients"
+msgstr "العملاء"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Plans"
+msgstr "الباقات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Logs"
+msgstr "السجلات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Name"
+msgstr "الاسم"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Code"
+msgstr "الكود"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_plan_form
+msgid "Description"
+msgstr "الوصف"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Customer Email"
+msgstr "بريد العميل"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Plan"
+msgstr "الباقة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database Name"
+msgstr "اسم قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database URL"
+msgstr "رابط قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subdomain"
+msgstr "النطاق الفرعي"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "State"
+msgstr "الحالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Status"
+msgstr "الحالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Operation"
+msgstr "العملية"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Message"
+msgstr "الرسالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "User"
+msgstr "المستخدم"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Client"
+msgstr "العميل"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Created by"
+msgstr "أنشئ بواسطة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Created on"
+msgstr "تاريخ الإنشاء"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Last Updated by"
+msgstr "آخر تحديث بواسطة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Last Updated on"
+msgstr "تاريخ آخر تحديث"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Display Name"
+msgstr "الاسم المعروض"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "ID"
+msgstr "المعرّف"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Active"
+msgstr "نشط"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Creating"
+msgstr "جاري الإنشاء"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Error"
+msgstr "خطأ"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Suspended"
+msgstr "معلّق"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Success"
+msgstr "نجاح"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Warning"
+msgstr "تحذير"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Failed"
+msgstr "فشل"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Monthly Price"
+msgstr "السعر الشهري"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Trial Days"
+msgstr "أيام التجربة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Template Database"
+msgstr "قاعدة بيانات القالب"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Max Users"
+msgstr "الحد الأقصى للمستخدمين"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Start Date"
+msgstr "تاريخ البداية"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Trial End Date"
+msgstr "تاريخ نهاية التجربة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription End Date"
+msgstr "تاريخ نهاية الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription Status"
+msgstr "حالة الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Allowed Users"
+msgstr "عدد المستخدمين المسموح"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Internal Notes"
+msgstr "ملاحظات داخلية"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription"
+msgstr "الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Trial"
+msgstr "تجربة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Paid"
+msgstr "مدفوع"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Expired"
+msgstr "منتهي"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Cancelled"
+msgstr "ملغي"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Last Backup Date"
+msgstr "تاريخ آخر نسخة احتياطية"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Last Backup Path"
+msgstr "مسار آخر نسخة احتياطية"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Error Message"
+msgstr "رسالة الخطأ"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Operation Logs"
+msgstr "سجل العمليات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Save"
+msgstr "حفظ"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Record saved successfully."
+msgstr "تم حفظ السجل بنجاح."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Create Database"
+msgstr "إنشاء قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Create Database Failed"
+msgstr "فشل إنشاء قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Check Database"
+msgstr "فحص قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database Check"
+msgstr "فحص قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database Check Failed"
+msgstr "فشل فحص قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Open Database"
+msgstr "فتح قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Backup Database"
+msgstr "نسخ احتياطي لقاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Backup Failed"
+msgstr "فشل النسخ الاحتياطي"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Suspend"
+msgstr "تعليق"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Suspend Database"
+msgstr "تعليق قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Activate"
+msgstr "تفعيل"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Activate Database"
+msgstr "تفعيل قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Renew Subscription"
+msgstr "تجديد الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Check Subscription"
+msgstr "فحص الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription Check"
+msgstr "فحص الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database name is required."
+msgstr "اسم قاعدة البيانات مطلوب."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Please set Template Database on the selected plan."
+msgstr "يرجى تحديد قاعدة بيانات القالب في الباقة المختارة."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Template database does not exist: %s"
+msgstr "قاعدة بيانات القالب غير موجودة: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Client database already exists: %s"
+msgstr "قاعدة بيانات العميل موجودة مسبقًا: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database can only be created from Draft or Error state."
+msgstr "يمكن إنشاء قاعدة البيانات فقط عندما تكون الحالة مسودة أو خطأ."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database created successfully: %s"
+msgstr "تم إنشاء قاعدة البيانات بنجاح: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database exists: %s"
+msgstr "قاعدة البيانات موجودة: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database does not exist."
+msgstr "قاعدة البيانات غير موجودة."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database does not exist: %s"
+msgstr "قاعدة البيانات غير موجودة: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database opened: %s"
+msgstr "تم فتح قاعدة البيانات: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Backup created successfully: %s"
+msgstr "تم إنشاء النسخة الاحتياطية بنجاح: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Only active databases can be suspended."
+msgstr "يمكن تعليق قواعد البيانات النشطة فقط."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database suspended successfully: %s"
+msgstr "تم تعليق قاعدة البيانات بنجاح: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Only suspended databases can be activated."
+msgstr "يمكن تفعيل قواعد البيانات المعلقة فقط."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database activated successfully: %s"
+msgstr "تم تفعيل قاعدة البيانات بنجاح: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription renewed until: %s"
+msgstr "تم تجديد الاشتراك حتى: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Trial period expired on: %s"
+msgstr "انتهت الفترة التجريبية بتاريخ: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription expired on: %s"
+msgstr "انتهى الاشتراك بتاريخ: %s"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Trial period expired. Client marked as expired."
+msgstr "انتهت الفترة التجريبية، وتم وضع العميل كمنتهي."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription expired. Client marked as expired."
+msgstr "انتهى الاشتراك، وتم وضع العميل كمنتهي."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription is still valid."
+msgstr "الاشتراك ما زال ساريًا."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database name can only contain lowercase letters, numbers, and underscores."
+msgstr "يمكن أن يحتوي اسم قاعدة البيانات على أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Client database name cannot start with template_."
+msgstr "لا يمكن أن يبدأ اسم قاعدة بيانات العميل بـ template_."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model:ir.model.fields,field_description:saas.field_saas_log__log_date
+msgid "Log Date"
+msgstr "تاريخ السجل"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model:ir.model.fields,field_description:saas.field_saas_client__database_exists
+msgid "Database Exists"
+msgstr "قاعدة البيانات موجودة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model:ir.model.fields,field_description:saas.field_saas_client__database_size
+msgid "Database Size"
+msgstr "حجم قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model:ir.model.fields,field_description:saas.field_saas_client__last_health_check
+msgid "Last Health Check"
+msgstr "آخر فحص للحالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model:ir.model.fields,field_description:saas.field_saas_client__health_message
+msgid "Health Message"
+msgstr "رسالة الحالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_client_form
+msgid "Database Health"
+msgstr "حالة قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_client_form
+#: model:ir.model.fields.selection,name:saas.selection__saas_log__operation__health_check
+msgid "Health Check"
+msgstr "فحص الحالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Health Check Failed"
+msgstr "فشل فحص الحالة"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Database is healthy. Size: %s"
+msgstr "قاعدة البيانات سليمة. الحجم: %s"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields,field_description:saas.field_saas_plan__billing_cycle
+#: model:ir.model.fields,field_description:saas.field_saas_client__billing_cycle
+msgid "Billing Cycle"
+msgstr "دورة الفوترة"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields.selection,name:saas.selection__saas_plan__billing_cycle__monthly
+msgid "Monthly"
+msgstr "شهري"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields.selection,name:saas.selection__saas_plan__billing_cycle__quarterly
+msgid "Quarterly"
+msgstr "ربع سنوي"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields.selection,name:saas.selection__saas_plan__billing_cycle__yearly
+msgid "Yearly"
+msgstr "سنوي"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields,field_description:saas.field_saas_plan__storage_limit_mb
+#: model:ir.model.fields,field_description:saas.field_saas_client__storage_limit_mb
+msgid "Storage Limit (MB)"
+msgstr "حد التخزين (MB)"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields,field_description:saas.field_saas_plan__allow_backup
+#: model:ir.model.fields,field_description:saas.field_saas_client__allow_backup
+msgid "Allow Backup"
+msgstr "السماح بالنسخ الاحتياطي"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields,field_description:saas.field_saas_plan__allow_restore
+#: model:ir.model.fields,field_description:saas.field_saas_client__allow_restore
+msgid "Allow Restore"
+msgstr "السماح بالاسترجاع"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields,field_description:saas.field_saas_plan__auto_suspend_on_expiry
+#: model:ir.model.fields,field_description:saas.field_saas_client__auto_suspend_on_expiry
+msgid "Auto Suspend On Expiry"
+msgstr "تعليق تلقائي عند انتهاء الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: model:ir.model.fields,field_description:saas.field_saas_plan__grace_period_days
+#: model:ir.model.fields,field_description:saas.field_saas_client__grace_period_days
+msgid "Grace Period Days"
+msgstr "أيام فترة السماح"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Backup is not allowed for this plan."
+msgstr "النسخ الاحتياطي غير مسموح لهذه الباقة."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Restore is not allowed for this plan."
+msgstr "استرجاع النسخة الاحتياطية غير مسموح لهذه الباقة."
+
+#. module: saas
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_plan_form
+msgid "Plan Limits"
+msgstr "حدود الباقة"
+
+#. module: saas
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_client_form
+msgid "Plan Settings"
+msgstr "إعدادات الباقة"
+
+#. module: saas
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_plan_form
+msgid "Plan Information"
+msgstr "معلومات الخطة"
+
+#. module: saas
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_plan_form
+msgid "Database Template"
+msgstr "قالب قاعدة البيانات"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Client suspended after subscription expiry grace period."
+msgstr "تم تعليق العميل بعد انتهاء فترة السماح للاشتراك."
+
+#. module: saas
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_client_form
+msgid "Mark as Expired"
+msgstr "تعيين كمنتهي"
+
+#. module: saas
+#: model_terms:ir.ui.view,arch_db:saas.view_saas_client_form
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Cancel Subscription"
+msgstr "إلغاء الاشتراك"
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription is already expired."
+msgstr "الاشتراك منتهي مسبقًا."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription marked as expired manually."
+msgstr "تم تعيين الاشتراك كمنتهي يدويًا."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription is already cancelled."
+msgstr "الاشتراك ملغى مسبقًا."
+
+#. module: saas
+#. odoo-python
+#: code:addons/saas/models/saas_client.py:0
+msgid "Subscription cancelled successfully."
+msgstr "تم إلغاء الاشتراك بنجاح."
