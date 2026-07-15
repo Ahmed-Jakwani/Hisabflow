@@ -178,8 +178,12 @@ class SaasClient(models.Model):
                 secret = auto_login_token.read_secret(
                     get_module_resource('odoo_saas_kit'), "container_master")
                 token = auto_login_token.build_token(secret, obj.database_name)
-                login_url = "{}/saas_kit/auto_login/{}".format(
-                    login_base_url.rstrip('/'), token)
+                # Client containers are pinned to one db via dbfilter, so this query
+                # param isn't strictly load-bearing here the way it is for the shared
+                # template container - added anyway for consistency/robustness (e.g.
+                # a stale session cookie pointing at a different db on this host).
+                login_url = "{}/saas_kit/auto_login/{}?{}".format(
+                    login_base_url.rstrip('/'), token, urlencode({'db': obj.database_name}))
             except Exception as e:
                 _logger.error("Could not build auto-login token, falling back to plain login page: %r", e)
                 login_url = "{}/web/login?{}".format(

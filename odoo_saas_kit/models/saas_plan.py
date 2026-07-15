@@ -284,7 +284,12 @@ class SaasPlans(models.Model):
                 secret = auto_login_token.read_secret(
                     get_module_resource('odoo_saas_kit'), "template_master")
                 token = auto_login_token.build_token(secret, obj.db_template)
-                login_url = "http://{}/saas_kit/auto_login/{}".format(template_host, token)
+                # odoo19_template_cont hosts every plan's template with no dbfilter -
+                # `db` must be passed as a query param so Odoo's HTTP layer dispatches
+                # to the right database BEFORE routing; the db embedded in the signed
+                # token itself only gets checked *after* dispatch, inside the controller.
+                login_url = "http://{}/saas_kit/auto_login/{}?{}".format(
+                    template_host, token, urlencode({'db': obj.db_template}))
             except Exception as e:
                 self.print_logs('error', 'Could not build auto-login token: %r' % e, '279')
                 login_url = "http://{}/web/login?{}".format(
