@@ -13,6 +13,7 @@ from . lib import containers, install_module
 from .compat import get_module_resource, is_new_id
 from . lib import query
 from . lib import saas
+from . lib import auto_login_token
 import logging
 import time
 import os
@@ -265,19 +266,29 @@ class SaasPlans(models.Model):
 
     def login_to_db_template(self):
         """
-            Open the selected template database's standard Odoo login page.
+            Auto-login as superuser into the selected template database, via the
+            `saas_kit_auto_login` addon (must be installed on the template - see
+            that addon's manifest). Falls back to a plain login page if the
+            template predates that addon (e.g. templates created before this was
+            added to create_db_template()'s module list).
 
-            ``/saas/login`` was provided by the legacy ``wk_saas_tool`` addon.
-            It is not available in the Odoo 19 template image.  Using Odoo's
-            database-aware login route also avoids exposing a password hash in
-            the URL, browser history, and proxy logs.
+            ``/saas/login`` was provided by the legacy ``wk_saas_tool`` addon,
+            which was never ported to the Odoo 19 template image;
+            `saas_kit_auto_login` replaces it.
         """
 
         for obj in self:
             template_host = "db{}_templates.{}".format(
                 SAAS_ODOO_VERSION.split('.', 1)[0], obj.saas_base_url)
-            login_url = "http://{}/web/login?{}".format(
-                template_host, urlencode({'db': obj.db_template}))
+            try:
+                secret = auto_login_token.read_secret(
+                    get_module_resource('odoo_saas_kit'), "template_master")
+                token = auto_login_token.build_token(secret, obj.db_template)
+                login_url = "http://{}/saas_kit/auto_login/{}".format(template_host, token)
+            except Exception as e:
+                self.print_logs('error', 'Could not build auto-login token: %r' % e, '279')
+                login_url = "http://{}/web/login?{}".format(
+                    template_host, urlencode({'db': obj.db_template}))
             return {
                 'type': 'ir.actions.act_url',
                 'url': login_url,
@@ -401,8 +412,16 @@ class SaasPlans(models.Model):
             config_path = get_module_resource('odoo_saas_kit')
             status_module = obj.create_status_modules()
             installable_modules = obj.get_installable_modules()
-            modules = [module.technical_name for module in installable_modules]            
-            modules.append('wk_saas_tool')
+            modules = [module.technical_name for module in installable_modules]
+            # 'wk_saas_tool' used to be force-installed here for its legacy /saas/login
+            # route, but that addon was never ported to the 19.0 template image - forcing
+            # its install silently failed per-module (see install_modules()) and left
+            # is_all_installed/module bookkeeping out of sync.
+            # 'saas_kit_auto_login' replaces it: a small addon exposing the auto-login
+            # route used by login_to_client_instance()/login_to_db_template() above.
+            # It must be copied into this Odoo version's common-addons folder on the
+            # server for it to be installable here - see the addon's own manifest.
+            modules.append('saas_kit_auto_login')
             try:
                 host_server, db_server = obj.server_id.get_server_details()
                 self.print_logs('info', 'calling create_db_template script', '398')

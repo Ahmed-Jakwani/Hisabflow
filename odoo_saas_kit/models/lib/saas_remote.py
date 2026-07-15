@@ -112,7 +112,9 @@ class odoo_remote_container:
             _logger.info("result = %r  %r"%(ssh_stderr.readlines(),res))
             if len(res) == 0:
                return False
-            self.response['port'] = int(res[0].strip())
+            # NOTE: self.response['port'] is set by the caller (run_odoo), not here - this
+            # method is called twice per container (web port, then longpolling port) and
+            # writing here let the second call silently clobber the first with the wrong port.
             return int(res[0].strip())
         except Exception as e:
             _logger.error("++++++++++ERROR++++%r",e)
@@ -234,10 +236,12 @@ class odoo_remote_container:
             port = self.find_me_an_available_port_within(8000,9000)#find_me_an_available_port()  # Grepping an avialable port.
             if port == False:
                 return False
+            self.response['port'] = port
             _logger.info("Port received %r"%port)
             lport = self.find_me_an_available_port_within(8000,9000, port)#find_me_an_available_port()  # Grepping an avialable port.
             if lport == False:
                 return False
+            self.response['longport'] = lport
 
             path = self.mkdir_OdooConfig(name, "odoo.conf") #Mounting the odoo.conf file. Should ask user for the location.Assuming /root/Odoo/config/$name for now.
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","dbfilter = %s"%db) 

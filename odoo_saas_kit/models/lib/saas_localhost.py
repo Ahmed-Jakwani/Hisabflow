@@ -116,7 +116,11 @@ class odoo_container:
              with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
                  res = sock.connect_ex(('localhost', port))
                  if res != 0:
-                     self.response['port'] =  port
+                     # NOTE: do not write to self.response here - this method is called twice
+                     # per container (once for the web port, once for the longpolling port),
+                     # and writing here let the second call silently clobber the first port
+                     # with the longpolling one. self.response['port']/['longport'] are set
+                     # explicitly by the caller (run_odoo) instead.
                      self.ports_in_use.add(str(port))
                      return port
         _logger.info("All the ports are being used. Try removing unused or obselete containers")
@@ -226,10 +230,12 @@ class odoo_container:
             port = self.find_me_an_available_port_within(8000,9000)#find_me_an_available_port()  # Grepping an avialable port.
             if port == False:
                 return False
+            self.response['port'] = port
 
             lport = self.find_me_an_available_port_within(8000,9000)#find_me_an_available_port()  # Grepping an avialable port.
             if lport == False:
                 return False
+            self.response['longport'] = lport
 
             path = self.mkdir_OdooConfig(name, "odoo.conf") #Mounting the odoo.conf file. Should ask user for the location.Assuming /root/Odoo/config/$name for now.
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","dbfilter = %s"%db) 

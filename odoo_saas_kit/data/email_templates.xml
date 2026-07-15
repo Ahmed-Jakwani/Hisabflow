@@ -21,10 +21,9 @@
 
                 <p>Kindly visit the following link to login to your Odoo Server. >> <t><a t-att-href="object.client_url"><t t-esc="object.client_url"/></a></t></p>
 
-                <p>Please reset password using the following URL.<br/>
-                <t> <a t-att-href="object.invitation_url"><t t-esc="object.invitation_url"/></a></t>
+                <p>You will receive a separate email directly from your new Odoo instance with a link to set your password. If it hasn't arrived shortly, please contact us.</p>
 
-                <p>You can always check the details of your previous and current plans from your Website account. 
+                <p>You can always check the details of your previous and current plans from your Website account.
                 To manage your plans please go to the website account.
                 </p>
 

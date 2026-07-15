@@ -15,7 +15,6 @@ from dateutil.relativedelta import relativedelta
 from werkzeug.urls import url_encode
 from .compat import get_module_resource
 from odoo.exceptions import UserError, ValidationError
-from odoo.addons.auth_signup.models.res_partner import random_token as generate_token
 from . lib import query
 from . lib import generate_ssl_custom_domain
 
@@ -328,7 +327,6 @@ class SaasContract(models.Model):
                     _ = int(obj.plan_id.template_user_id)
                 except Exception as e:
                     raise UserError("Database Template ID Must be a Interger Value!")
-            token = generate_token()
             try:
                 if obj.from_backend:
                     obj.generate_invoice(first_invoice=True)
@@ -338,10 +336,14 @@ class SaasContract(models.Model):
             except Exception as e:
                 raise UserError("Unable To Write User Data %r"%e)
             try:
-                obj.sudo().set_user_data(token=token)
+                obj.sudo().set_user_data()
                 obj._cr.commit()
-                reset_pwd_url = "{}/web/signup?token={}&db={}".format(obj.saas_client.client_url, token, obj.saas_client.database_name)
-                obj.saas_client.invitation_url = reset_pwd_url
+                # The actual password-setup link is now emailed directly by the client's
+                # own instance (see set_user_data() -> query.trigger_password_reset()).
+                # invitation_url just gives the branded welcome email a working link to
+                # the instance itself.
+                obj.saas_client.invitation_url = "{}/web/login?db={}".format(
+                    obj.saas_client.client_url, obj.saas_client.database_name)
             except Exception as e:
                 _logger.info("--------EXCEPTION-WHILE-UPDATING-DATA-AND-SENDING-INVITE-------%r----", e)
                 raise UserError('Exception while updating client data.')
@@ -369,6 +371,10 @@ class SaasContract(models.Model):
 
 
     def set_user_data(self, token=False):
+        # `token` is accepted for backward compatibility with existing callers but is no
+        # longer used: Odoo 19 doesn't validate a hand-written signup_token (see
+        # query.update_user()/query.trigger_password_reset() for why). The real,
+        # validly-signed reset-password email is now triggered via RPC below.
         self.print_logs('info', 'called set_user_data', '304')
         for obj in self:
             data = dict()
@@ -379,9 +385,10 @@ class SaasContract(models.Model):
             host_server, db_server = obj.server_id.get_server_details()
             data['database'] = obj.saas_client and obj.saas_client.database_name or False
             data['user_id'] = obj.plan_id.use_specific_user_template and obj.plan_id.template_user_id and int(obj.plan_id.template_user_id)
+            login = user_id and user_id.login or partner_id.email or ''
             data['user_data'] = dict(
                 name = user_id and user_id.name or partner_id.name or '',
-                login = user_id and user_id.login or partner_id.email or '',
+                login = login,
             )
 
             data['partner_data'] = dict(
@@ -395,8 +402,6 @@ class SaasContract(models.Model):
                 phone = partner_id.phone or '',
                 email = partner_id.email or '',
                 website = partner_id.website or '',
-                signup_token=token or '',
-                signup_type="signup",
             )
             data['host_server'] = host_server
             data['db_server'] = db_server
@@ -412,6 +417,19 @@ class SaasContract(models.Model):
                     body="User Data Update Successfully",
                     subject="User Data Update Response",
                 )
+                if obj.saas_client and obj.saas_client.client_url and login:
+                    reset_sent = query.trigger_password_reset(
+                        get_module_resource('odoo_saas_kit'),
+                        obj.saas_client.client_url,
+                        data['database'],
+                        login,
+                    )
+                    if not reset_sent:
+                        obj.message_post(
+                            body="Could not trigger the password-reset email on the client instance. "
+                                 "Please use \"Send Password Reset Instructions\" from the client's Users menu manually.",
+                            subject="Password Reset Not Sent",
+                        )
             else:
                 _logger.info("------2-------")
                 obj.user_data_updated = False
@@ -708,16 +726,16 @@ class SaasContract(models.Model):
                     self._cr.commit()
                     if client_id.client_url:
                         try:
-                            token = generate_token()
-                            _logger.info("--------------%r", token)
-                            obj.sudo().set_user_data(token=token)
+                            obj.sudo().set_user_data()
                             self._cr.commit()
                         except Exception as e:
                             _logger.info("--------EXCEPTION-WHILE-UPDATING-DATA-------%r----", e)
                             raise UserError(f"Exception While Updating Client Data {e}")
                         else:
-                            reset_pwd_url = "{}/web/signup?token={}&db={}".format(client_id.client_url, token, client_id.database_name)
-                            client_id.invitation_url = reset_pwd_url
+                            # Real password-setup link is emailed directly by the client's own
+                            # instance now (see set_user_data() -> query.trigger_password_reset()).
+                            client_id.invitation_url = "{}/web/login?db={}".format(
+                                client_id.client_url, client_id.database_name)
                             template = obj.on_create_email_template
                             mail_id = template.send_mail(client_id.id)
                             current_mail = self.env['mail.mail'].browse(mail_id)
@@ -878,11 +896,12 @@ class SaasContract(models.Model):
 
         if self.saas_client.invitation_url:
             try:
-                token = generate_token()
-                self.sudo().set_user_data(token=token)
+                self.sudo().set_user_data()
                 self._cr.commit()
-                reset_pwd_url = "{}/web/signup?token={}&db={}".format(self.saas_client.client_url, token, self.saas_client.database_name)
-                self.saas_client.invitation_url = reset_pwd_url
+                # Real password-setup link is emailed directly by the client's own
+                # instance now (see set_user_data() -> query.trigger_password_reset()).
+                self.saas_client.invitation_url = "{}/web/login?db={}".format(
+                    self.saas_client.client_url, self.saas_client.database_name)
                 self.state = 'confirm'
             except Exception as e:
                 _logger.info("--------EXCEPTION-WHILE-UPDATING-DATA-AND-SENDING-INVITE-------%r----", e)

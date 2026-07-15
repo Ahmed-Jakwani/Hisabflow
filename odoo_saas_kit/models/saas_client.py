@@ -20,6 +20,7 @@ from . lib import saas
 from . lib import query
 from . lib import containers
 from . lib import client
+from . lib import auto_login_token
 from .static_saas_kit import SAAS_ODOO_VERSION
 
 _logger = logging.getLogger(__name__)
@@ -170,8 +171,19 @@ class SaasClient(models.Model):
             if not login_base_url:
                 raise UserError("The client instance does not have a login URL yet.")
 
-            login_url = "{}/web/login?{}".format(
-                login_base_url.rstrip('/'), urlencode({'db': obj.database_name}))
+            # Auto-login as superuser via the `saas_kit_auto_login` addon (must be
+            # installed on the client's own database - see that addon's README/manifest).
+            # Falls back to a plain login page if the client predates that addon.
+            try:
+                secret = auto_login_token.read_secret(
+                    get_module_resource('odoo_saas_kit'), "container_master")
+                token = auto_login_token.build_token(secret, obj.database_name)
+                login_url = "{}/saas_kit/auto_login/{}".format(
+                    login_base_url.rstrip('/'), token)
+            except Exception as e:
+                _logger.error("Could not build auto-login token, falling back to plain login page: %r", e)
+                login_url = "{}/web/login?{}".format(
+                    login_base_url.rstrip('/'), urlencode({'db': obj.database_name}))
             return {
                 'type': 'ir.actions.act_url',
                 'url': login_url,
