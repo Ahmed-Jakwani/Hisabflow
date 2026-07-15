@@ -243,7 +243,10 @@ class odoo_container:
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","admin_passwd = %s"%self.container_master) 
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_host = %s"%self.db_host) 
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_port = %s"%self.db_port) 
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_password = %s"%self.db_password) 
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_password = %s"%self.db_password)
+            # saas_kit_auto_login must be server-wide to be reachable before Odoo has
+            # resolved a database for the request (see that addon's controller docstring).
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","server_wide_modules = base,rpc,web,saas_kit_auto_login")
             extra_path = self.mkdir_mnt_extra_addons(name)
             self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%name)
@@ -512,6 +515,10 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_port = %s"%OdooObject.db_port) 
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_host = %s"%OdooObject.db_host) 
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_password = %s"%OdooObject.db_password)
+            # saas_kit_auto_login must be server-wide to be reachable before Odoo has
+            # resolved a database - required here since this container has no dbfilter
+            # and serves every plan's template behind one shared hostname.
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","server_wide_modules = base,rpc,web,saas_kit_auto_login")
 
             OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%OdooObject.odoo_template)
