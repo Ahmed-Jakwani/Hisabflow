@@ -244,6 +244,14 @@ class odoo_container:
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_host = %s"%self.db_host) 
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_port = %s"%self.db_port) 
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_password = %s"%self.db_password)
+            # Without this, Odoo defaults data_dir to /var/lib/odoo/.local/share/Odoo -
+            # inside the container's anonymous docker volume, NOT the bind-mounted host
+            # path below (self.data_dir, mounted here as `extra_path`). That means the
+            # filestore (attachments, module icons, uploaded images, etc.) silently lives
+            # somewhere the host/other containers can never reach, and the filestore
+            # copy-from-template step a few lines down in main() always fails to find
+            # anything to copy (logged as "Filestore couldnot be copied FileNotFoundError").
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","data_dir = %s"%self.data_dir)
             # saas_kit_auto_login must be server-wide to be reachable before Odoo has
             # resolved a database for the request (see that addon's controller docstring).
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","server_wide_modules = base,rpc,web,saas_kit_auto_login")
@@ -515,6 +523,11 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_port = %s"%OdooObject.db_port) 
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_host = %s"%OdooObject.db_host) 
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_password = %s"%OdooObject.db_password)
+            # See the matching comment in run_odoo() - without this, the filestore
+            # (module icons, uploaded images, etc.) lives in the container's anonymous
+            # docker volume instead of the bind-mounted host path, so client creation's
+            # filestore-copy-from-template step always fails to find anything to copy.
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","data_dir = %s"%OdooObject.data_dir)
             # saas_kit_auto_login must be server-wide to be reachable before Odoo has
             # resolved a database - required here since this container has no dbfilter
             # and serves every plan's template behind one shared hostname.

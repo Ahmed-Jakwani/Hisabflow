@@ -68,6 +68,13 @@ class AddModuleToPlan(models.TransientModel):
         msg += " and installed on: %s." % ", ".join(installed_on) if installed_on else "."
         if failures:
             msg += "<br/>Failed on: %s" % "; ".join(failures)
+        # The install RPC only updates the database - an already-running container's
+        # process doesn't reload its own module/asset registry from that, so the
+        # module can look "installed" yet remain invisible until the container that
+        # actually serves that database is restarted (docker restart <container>).
+        msg += ("<br/><i>Note: the template container and each affected client container "
+                "may need a restart (docker restart) before this module's UI/assets actually "
+                "show up for users - installing it here only updates the database.</i>")
         plan.message_post(body=msg)
 
         if failures:
