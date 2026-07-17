@@ -11,6 +11,8 @@ from odoo import fields, models, api
 from odoo.exceptions import UserError,  ValidationError
 from . lib import saas_client_db
 from . lib import query
+from . lib import auto_login_token
+from .compat import get_module_resource
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -41,7 +43,13 @@ class ModuleStatus(models.Model):
             if response.get('status'):
                 response = response.get('result')
                 login = response[0][0]
-                password = response[0][1]
+                # NOTE: response[0][1] is res_users.password - a HASH, not the real
+                # password, and can never authenticate over XML-RPC. The real,
+                # working password for every client's admin user is `container_passwd`
+                # (see odoo_container.create_db() - it's what the account was actually
+                # created with; set_user_data() only ever changes `login`, never this).
+                password = auto_login_token.read_secret(
+                    get_module_resource('odoo_saas_kit'), "container_passwd")
             else:
                 raise UserError("ERR001: "+str(response.get('message')))
             

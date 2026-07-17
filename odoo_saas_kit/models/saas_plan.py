@@ -359,14 +359,21 @@ class SaasPlans(models.Model):
 
         modules = [module.technical_name for module in installable_modules]
         host_server, db_server = self.server_id.get_server_details()
-        cred_response = query.get_credentials(
-                    self.db_template,
-                    host_server=host_server,
-                    db_server=db_server)
-        if cred_response.get('status'):
-            response = cred_response.get('result')
-            login = response[0][0]
-            password = response[0][1]
+        # NOTE: template admin users are always created with `container_user`/
+        # `container_passwd` (see odoo_container.create_db()) and templates never
+        # go through set_user_data() (that only touches real clients), so those
+        # saas.conf values are the real, working login credentials here - unlike
+        # query.get_credentials(), which reads the DB's *hashed* password and can
+        # never authenticate over XML-RPC (that's what caused "Connection Failure").
+        config_path = get_module_resource('odoo_saas_kit')
+        try:
+            login = auto_login_token.read_secret(config_path, "container_user")
+            password = auto_login_token.read_secret(config_path, "container_passwd")
+            cred_status = True
+        except Exception as e:
+            _logger.error("Could not read container credentials from saas.conf: %r", e)
+            cred_status = False
+        if cred_status:
             try:
                 response = install_module.main(dict(
                     db_name=self.db_template,
