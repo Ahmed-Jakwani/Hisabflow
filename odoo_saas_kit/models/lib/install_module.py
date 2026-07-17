@@ -51,9 +51,12 @@ def process_install(modules_list=None, odoo_url=None, database_name=None, odoo_u
     return response
 
 def get_port(path, version):
+    # NOTE: this must be the template's main web/XML-RPC port (template_odoo_port_v*),
+    # not the longpolling port (template_odoo_lport_v*) - erppeek talks XML-RPC over
+    # the main port; connecting to the longpolling port gets "Connection reset by peer".
     parser = ConfigParser()
     parser.read(path)
-    template_odoo_port = parser.get("options","template_odoo_lport_v"+version)
+    template_odoo_port = parser.get("options","template_odoo_port_v"+version)
     return template_odoo_port
 
 
