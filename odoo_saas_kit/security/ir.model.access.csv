@@ -31,3 +31,4 @@ access_custom_message_wizard_manager,access.custom.message.wizard.manager,model_
 access_custom_message_wizard_all,access.custom.message.wizard.all,model_custom_message_wizard,base.group_user,1,0,0,0
 access_action_window_manager,access.action.window.manager,base.model_ir_actions_act_window,odoo_saas_kit.group_saas_manager,1,0,0,0
 access_saas_plan_reset_manager,saas.plan.reset.manager,model_saas_plan_reset,odoo_saas_kit.group_saas_manager,1,1,1,1
+access_saas_plan_add_module_manager,saas.plan.add.module.manager,model_saas_plan_add_module,odoo_saas_kit.group_saas_manager,1,1,1,1

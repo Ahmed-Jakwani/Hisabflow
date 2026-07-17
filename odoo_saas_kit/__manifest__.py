@@ -55,6 +55,7 @@
                              'wizards/custom_domain_wizard_view.xml',
                              'wizards/custom_message_wizard_view.xml',
                              'wizards/plan_reset_view.xml',
+                             'wizards/add_module_to_plan_view.xml',
                              'views/custom_domain.xml',
                              'views/saas_plan_view.xml',
                              'views/saas_contract_view.xml',

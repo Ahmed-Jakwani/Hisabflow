@@ -60,7 +60,9 @@
                         <button string="Drop DB" name="%(odoo_saas_kit.action_drop_db_plan_wizard)d" type="action" icon="fa-trash" class="oe_highlight" invisible="(state != 'cancel') or db_dropped"/>
 
                         <button string="Install remaining Modules" name="install_remaining_modules" type="object" invisible="(state != 'confirm') or is_all_installed"/>
-                        
+
+                        <button type="action" name="%(odoo_saas_kit.action_wizard_add_module_to_plan)d" string="Add Module" icon="fa-plus" invisible="state != 'confirm'" help="Add a new module to this already-confirmed plan and push it to its running clients"/>
+
                         <field name="state" widget="statusbar"/>
                         <field name="db_dropped" invisible="1"/>
                     </header>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2016-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>) -->
+<!-- See LICENSE file for full copyright and licensing details. -->
+<!-- License URL : <https://store.webkul.com/license.html/> -->
+
+<odoo>
+    <data>
+
+        <record id="add_module_to_plan_wizard_view" model="ir.ui.view">
+            <field name="name">Add Module To Plan</field>
+            <field name="model">saas.plan.add.module</field>
+            <field name="arch" type="xml">
+                <form string="Add Module">
+                    <field name="plan_id" invisible="1"/>
+                    <group>
+                        <field name="module_id"/>
+                    </group>
+                    <div class="text-muted">
+                        This installs the module into the plan's DB template (so future clients get
+                        it automatically) and pushes it live to every currently running client of
+                        this plan.
+                    </div>
+                    <footer>
+                        <button string="Add &amp; Install" name="action_add_module" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_wizard_add_module_to_plan" model="ir.actions.act_window">
+            <field name="name">Add Module to Plan</field>
+            <field name="res_model">saas.plan.add.module</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="add_module_to_plan_wizard_view"/>
+            <field name="context">{'default_plan_id': active_id}</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

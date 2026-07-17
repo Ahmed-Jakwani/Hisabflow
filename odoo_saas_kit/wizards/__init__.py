@@ -13,3 +13,4 @@ from . import custom_domain_wizard
 from . import disable_plan_wizard
 from . import custom_message_wizard
 from . import plan_reset_to_draft_wizard
+from . import add_module_to_plan_wizard
