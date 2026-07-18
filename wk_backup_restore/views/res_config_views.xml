@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2016-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>) -->
+<!-- See LICENSE file for full copyright and licensing details. -->
+<!-- License URL : <https://store.webkul.com/license.html/> -->
+
+<odoo>
+    <record id="res_config_settings_inherit_view_form" model="ir.ui.view">
+        <field name="name">res.config.setting.inherit.form.backup</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval='20'/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+
+                <app string="Odoo Database Backup" data-string="Odoo Database Backup" name="wk_backup_restore" groups="base.group_system">
+                    <block title="Default Configuration for Odoo Database Backup" id="database_backup_config" class="database_backup_setting_block" name="database_backup_setting_container">
+
+                        <setting class="col-12" id="database_backup_test_configuration" string="Test Configuration for Database Backup">
+                            <button name="check_database_backup_configuration" type="object" string="Test Backup Configuration" class="oe_highlight"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="backup_config_form_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="wk_backup_restore.res_config_settings_inherit_view_form"/>
+        <field name="context">{'module' : 'wk_backup_restore'}</field>
+    </record>
+
+
+    
+</odoo>

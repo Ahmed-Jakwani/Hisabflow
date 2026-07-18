@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2016-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>) -->
+<!-- See LICENSE file for full copyright and licensing details. -->
+<!-- License URL : <https://store.webkul.com/license.html/> -->
+
+<odoo>
+    <data noupdate="0">
+        <record id="wk_backup_restore.backup_failure_template" model="mail.template">
+            <field name="name">Database Backup Failure Mail</field>
+            <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="subject">Database Backup Process Failure</field>
+            <field name="model_id" ref="wk_backup_restore.model_backup_process_detail"/>
+            <field name="auto_delete" eval="False"/>
+            <field name="lang">{{user.partner_id.lang}}</field>
+            <field name="body_html" type="html">
+
+                <div style="margin: 0px; padding: 0px;">
+                    Dear Admin, <br/>
+
+                    <p>Greetings of the Day.</p>
+                    <p>The backup creation of the backup process <strong><t t-esc="object.backup_process_id.name" /></strong> has been failed. </p>
+
+                    <p>Error: <br /> <pre><t t-esc="object.message"/></pre></p>
+
+                    <p>Thank you</p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>
