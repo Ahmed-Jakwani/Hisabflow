@@ -46,6 +46,8 @@
                     <header>
                         <button string="Login" name="login_to_client_instance" type="object" icon="fa-sign-in" class="oe_highlight" invisible="(state != 'started')"/>
 
+                        <button type="action" name="%(odoo_saas_kit.action_view_credentials_wizard_client)d" string="View Credentials" icon="fa-key" invisible="not client_url"/>
+
                         <button string="Start" name="start_client" type="object" icon="fa-play-circle" class="oe_highlight" invisible="(state  != 'stopped')"/>
 
                         <button string="Restart" name="restart_client" type="object" icon="fa-refresh" class="oe_highlight" invisible="(state != 'started')"/>

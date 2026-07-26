@@ -50,6 +50,8 @@
 
                         <button string="Login" name="login_to_db_template" type="object" icon="fa-sign-in" invisible="(state != 'confirm')"/>
 
+                        <button type="action" name="%(odoo_saas_kit.action_view_credentials_wizard_plan)d" string="View Credentials" icon="fa-key" invisible="state != 'confirm'"/>
+
                         <button string="Restart" name="restart_db_template" type="object" icon="fa-refresh" invisible="(state != 'confirm')"/>
 
                         <button type="action" name="odoo_saas_kit.action_wizard_plan_reset" string="Reset to draft"  invisible="state in ['draft', 'cancel']"/>
