@@ -310,6 +310,46 @@ Still to do (deferred by user): the actual **modules restriction** issue
 (clients installing modules beyond their plan) — root cause already
 documented above, no code changes made for it yet.
 
+## Other module: `auto_database_backup` (not part of SaaS Kit)
+
+Cybrosys "Automatic Database Backup" module, pasted directly into the local
+repo (not from git) on 2026-07-26 — a hardened/refactored build (master
+password never persisted, cron-only guard on dumps, safe OAuth redirects,
+real test suite), not stock Cybrosys code.
+
+Originally supported 11 destinations (Local, Google Drive, FTP, SFTP,
+Dropbox, OneDrive, NextCloud, Amazon S3, Azure Blob, Google Cloud Storage,
+WebDAV). Per instruction, trimmed down to only: **Local, FTP, SFTP, Google
+Drive, Google Cloud Storage**. Dropbox/OneDrive/NextCloud/Amazon
+S3/Azure Blob/WebDAV code fully removed (fields, handler methods, OAuth
+routes/wizard, external Python deps) — not just hidden from the UI.
+
+- `models/db_backup_configure.py`: 1386 → 836 lines.
+- Deleted: `wizard/dropbox_auth_code.py`, `wizard/dropbox_auth_code_views.xml`.
+- `controllers/auto_database_backup.py`: `OnedriveAuth` renamed to
+  `GoogleDriveAuth` (only Google Drive's OAuth callback remains; OneDrive's
+  route removed).
+- `__manifest__.py` `external_dependencies` trimmed to `paramiko` +
+  `google-cloud-storage` only.
+- Tests, mail templates (success/failure notification emails), and the
+  config form view all updated to match — verified no leftover references to
+  removed providers anywhere in the module (`grep` clean).
+- Follow-up: also removed the 31 screenshot images tied to the dropped
+  providers (`amazon*.png`, `drop*.png`, `dropbox\`1.png`, `onedrive*.png`,
+  `nextcloud*.png`, `next2.png`) from `static/description/assets/screenshots/`,
+  and cleaned `static/description/index.html` (989 → 782 lines) so it no
+  longer references those deleted images or describes the removed providers
+  (banner text, "12→5 Storage Destinations" copy in two places, the
+  destination-card grids in two places, the pip-install list, the screenshot
+  tabs/panes for Dropbox/OneDrive/Nextcloud/Amazon S3, the FAQ answer, and the
+  changelog entry). Verified: no leftover provider mentions (grep clean, one
+  unrelated Font Awesome CDN hostname aside) and no `<img src>` pointing at a
+  now-missing file. `README.rst`/`doc/RELEASE_NOTES.md` still left untouched
+  (not loaded by Odoo, not explicitly requested).
+
+Still uncommitted locally as of this entry — user will review, commit, push,
+then pull + install on the server per the standard workflow above.
+
 ## Session Log
 
 - **2026-07-26**: Given SSH access to production server (187.127.125.206) for
