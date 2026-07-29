@@ -4,6 +4,7 @@ import subprocess
 from configparser import ConfigParser
 import shutil
 import logging
+import paramiko
 _logger = logging.getLogger(__name__)
 
 
@@ -23,6 +24,28 @@ def execute_on_shell(cmd):
         return True
     except subprocess.CalledProcessError as e:
         _logger.error(e)
+        return False
+
+def execute_on_host_via_ssh(cmd, ssh_conf):
+    """
+    nginx runs on the host, not inside this container, so validating/
+    reloading it has to happen over SSH (mirrors
+    nginx_vhost.execute_on_host_via_ssh in saas_localhost.py).
+    """
+    if not (ssh_conf.get("host") and ssh_conf.get("user") and ssh_conf.get("key")):
+        _logger.error("Nginx SSH settings not configured (nginx_ssh_host/user/key in saas.conf)")
+        return False
+    try:
+        ssh_obj = paramiko.SSHClient()
+        ssh_obj.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_obj.connect(hostname=ssh_conf["host"], port=ssh_conf.get("port", 22), username=ssh_conf["user"], key_filename=ssh_conf["key"], timeout=15)
+        stdin, stdout, stderr = ssh_obj.exec_command(cmd)
+        exit_status = stdout.channel.recv_exit_status()
+        _logger.info("-----------SSH COMMAND RESULT--------%r %r", stdout.read(), stderr.read())
+        ssh_obj.close()
+        return exit_status == 0
+    except Exception as e:
+        _logger.error("+++++++++++++ERRROR (nginx ssh)++++%r", e)
         return False
 
 def grep_backends_from_conf(odoo_saas_data, subdomain):
@@ -45,7 +68,7 @@ def grep_backends_from_conf(odoo_saas_data, subdomain):
 
     return odoo_backend, longpolling_backend
 
-def replace_placeholders(vhost_file, odoo_backend, longpolling_backend, custom_domain):
+def replace_placeholders(vhost_file, odoo_backend, longpolling_backend, custom_domain, ssh_conf):
     cmd = "sed -i \"s/LONG_BACKEND_TO_BE_REPLACED/%s/g\" %s"%(longpolling_backend,vhost_file)
     if not execute_on_shell(cmd):
         _logger.info("Couldn't Replace Port!!")
@@ -58,43 +81,43 @@ def replace_placeholders(vhost_file, odoo_backend, longpolling_backend, custom_d
     if not execute_on_shell(cmd):
         _logger.info("Couldn't Replace Subdomain!!")
         return False
-    if not execute_on_shell(REVERSE_PROXY_CHECK):
+    if not execute_on_host_via_ssh(REVERSE_PROXY_CHECK, ssh_conf):
         _logger.info("Couldn't Replace Subdomain!!")
         os.remove(vhost_file)
         _logger.info("%s vhost file removed"%vhost_file)
         return False
-    if not execute_on_shell(REVERSE_PROXY_RELOAD):
+    if not execute_on_host_via_ssh(REVERSE_PROXY_RELOAD, ssh_conf):
         _logger.info("Couldn't Replace Subdomain!!")
         os.remove(vhost_file)
         _logger.info("%s vhost file removed"%vhost_file)
         return False
     return True
 
-def create_vhost_redirect(custom_domain, docker_vhosts):
+def create_vhost_redirect(custom_domain, docker_vhosts, ssh_conf):
     new_conf = os.path.join(docker_vhosts, custom_domain+".conf")
     if os.path.exists(new_conf):
         custom_domain_vhost = open(new_conf, 'a+')
         vhosttemplateredirect = open(os.path.join(docker_vhosts, "vhosttemplateredirect.txt"))
         custom_domain_vhost.write("\n\n" + vhosttemplateredirect.read())
-        
+
         custom_domain_vhost.close()
         vhosttemplateredirect.close()
-        
+
         cmd = "sed -i \"s/DOMAIN_TO_BE_REPLACED/%s/g\"  %s"%(custom_domain, new_conf)
         if not execute_on_shell(cmd):
             _logger.error("Couldn't Replace Subdomain!!")
             return False
-        if not execute_on_shell(REVERSE_PROXY_CHECK):
+        if not execute_on_host_via_ssh(REVERSE_PROXY_CHECK, ssh_conf):
             _logger.error("Couldn't Replace Subdomain!!")
             return False
-        if not execute_on_shell(REVERSE_PROXY_RELOAD):
+        if not execute_on_host_via_ssh(REVERSE_PROXY_RELOAD, ssh_conf):
             _logger.error("Couldn't Replace Subdomain!!")
             return False
     else:
         _logger.error("File not created")
         return False
 
-def create_vhost_https(subdomain, custom_domain, odoo_backend, longpolling_backend, docker_vhosts="/opt/odoo/Odoo-SAAS-Data/docker_vhosts"):
+def create_vhost_https(subdomain, custom_domain, odoo_backend, longpolling_backend, ssh_conf, docker_vhosts="/opt/odoo/Odoo-SAAS-Data/docker_vhosts"):
     #sed -i 's/.*ssl_certificate\ .*/ ssl_certificate \/this\/is\/test/' ssl.conf
     new_conf = os.path.join(docker_vhosts, custom_domain+".conf")
     if os.path.exists(new_conf):
@@ -111,44 +134,29 @@ def create_vhost_https(subdomain, custom_domain, odoo_backend, longpolling_backe
     if not execute_on_shell(cmd):
         _logger.info("Couldn't add ssl key in vhostfile")
         return False
-    return replace_placeholders(new_conf, odoo_backend, longpolling_backend, custom_domain)
+    return replace_placeholders(new_conf, odoo_backend, longpolling_backend, custom_domain, ssh_conf)
 
-def create_vhost_http(subdomain, custom_domain, odoo_backend, longpolling_backend, docker_vhosts="/opt/odoo/Odoo-SAAS-Data/docker_vhosts", ssl_flag=False):
+def create_vhost_http(subdomain, custom_domain, odoo_backend, longpolling_backend, ssh_conf, docker_vhosts="/opt/odoo/Odoo-SAAS-Data/docker_vhosts", ssl_flag=False):
     #sed -i 's/.*ssl_certificate\ .*/ ssl_certificate \/this\/is\/test/' ssl.conf
     new_conf = os.path.join(docker_vhosts, custom_domain+".conf")
-    _logger.info(locals()) 
-    if False and ssl_flag:
-        shutil.copyfile(os.path.join(docker_vhosts, "vhosttemplatehttps.txt"), os.path.join(docker_vhosts, custom_domain+".conf"))
-        # new_conf = custom_domain+".conf" #only for testing the code
-        certificate_path = os.path.join("/etc/letsencrypt/live/", custom_domain + "/fullchain.pem")
-        privkey_path = os.path.join("/etc/letsencrypt/live/", custom_domain + "/privkey.pem")
-        cmd = "sed -i 's/.*ssl_certificate .*/ ssl_certificate %s;/' %s"%(certificate_path.replace("/", "\/"), new_conf)
-        if not execute_on_shell(cmd):
-            _logger.info("Couldn't add ssl certificate path")
-            return False
-        cmd = "sed -i 's/.*ssl_certificate_key .*/ ssl_certificate_key %s;/' %s"%(privkey_path.replace("/", "\/"), new_conf)
-        if not execute_on_shell(cmd):
-            _logger.info("Couldn't add ssl key in vhostfile")
-            return False
-        return replace_placeholders(new_conf, odoo_backend, longpolling_backend, custom_domain)        
-    else:
-        shutil.copyfile(os.path.join(docker_vhosts, "vhosttemplatehttp.txt"), os.path.join(docker_vhosts, custom_domain+".conf"))
-        return replace_placeholders(new_conf, odoo_backend, longpolling_backend, custom_domain)
+    _logger.info(locals())
+    shutil.copyfile(os.path.join(docker_vhosts, "vhosttemplatehttp.txt"), os.path.join(docker_vhosts, custom_domain+".conf"))
+    return replace_placeholders(new_conf, odoo_backend, longpolling_backend, custom_domain, ssh_conf)
 
-def reload_nginx():
-    if not execute_on_shell("sudo nginx -t"):
+def reload_nginx(ssh_conf):
+    if not execute_on_host_via_ssh(REVERSE_PROXY_CHECK, ssh_conf):
         _logger.error("Error in nginx config!!.Syntax test Failed")
         return False
-    if not execute_on_shell("sudo nginx -s reload"):
+    if not execute_on_host_via_ssh(REVERSE_PROXY_RELOAD, ssh_conf):
         _logger.error("Error reloading Nginx")
         return False
     return True
 
-def remove_vhost(domain, docker_vhosts):
+def remove_vhost(domain, docker_vhosts, ssh_conf):
     if os.path.exists(os.path.join(docker_vhosts, domain + ".conf")):
         os.remove(os.path.join(docker_vhosts, domain + ".conf"))
         _logger.info("%s removed successfully"%domain)
-        reload_nginx()
+        reload_nginx(ssh_conf)
     else:
         _logger.info("Vhost does not exists")
 
@@ -162,9 +170,20 @@ def read_path_saas_conf(module_path):
 
     return odoo_saas_data
 
-def run_certbot(custom_domain, client_email, webroot_path, dry_run):
+def read_nginx_ssh_conf(module_path):
+    saas_conf_path = os.path.join(module_path, "models/lib/saas.conf")
+    parser = ConfigParser()
+    parser.read(saas_conf_path)
+    return {
+        "host": parser.get("options", "nginx_ssh_host", fallback=None),
+        "port": parser.getint("options", "nginx_ssh_port", fallback=22),
+        "user": parser.get("options", "nginx_ssh_user", fallback=None),
+        "key": parser.get("options", "nginx_ssh_key", fallback=None),
+    }
+
+def run_certbot(custom_domain, client_email, webroot_path, dry_run, ssh_conf):
     _logger.info(locals())
-    out = generate_certificate(custom_domain, client_email, webroot_path, dry_run)
+    out = generate_certificate(custom_domain, client_email, webroot_path, dry_run, ssh_host=ssh_conf.get("host"), ssh_port=ssh_conf.get("port", 22), ssh_user=ssh_conf.get("user"), ssh_key=ssh_conf.get("key"))
     _logger.info(out)
     if not out['status']:
         _logger.error("Certificate generation failed", out['stderr'])
@@ -175,9 +194,10 @@ def run_certbot(custom_domain, client_email, webroot_path, dry_run):
 def main_remove(custom_domain, module_path):
     _logger.info('-'*10, custom_domain, module_path, '-'*10)
     odoo_saas_data = read_path_saas_conf(module_path)
+    ssh_conf = read_nginx_ssh_conf(module_path)
     docker_vhosts = os.path.join(odoo_saas_data, "docker_vhosts")
     try:
-        remove_vhost(custom_domain, docker_vhosts)
+        remove_vhost(custom_domain, docker_vhosts, ssh_conf)
         return { "status": True,"message":True }
     except Exception as e:
         return { "status": False,"message":"Error %r"%e }
@@ -192,18 +212,19 @@ def main_add(subdomain, custom_domain, ssl_flag, module_path):
                 'message': "Invalid Domain %r. Try replacing underscore with hypen & avoid any other special characters."%custom_domain
                 }
     odoo_saas_data = read_path_saas_conf(module_path)
+    ssh_conf = read_nginx_ssh_conf(module_path)
     try:
         if check_ips(custom_domain, subdomain):
             odoo_backend, longpolling_backend = grep_backends_from_conf(os.path.join(odoo_saas_data, "docker_vhosts"), subdomain)
             _logger.info("%r %r"%(odoo_backend, longpolling_backend))
-            create_vhost_http(subdomain, custom_domain, odoo_backend, longpolling_backend, docker_vhosts=os.path.join(odoo_saas_data, "docker_vhosts"))
+            create_vhost_http(subdomain, custom_domain, odoo_backend, longpolling_backend, ssh_conf, docker_vhosts=os.path.join(odoo_saas_data, "docker_vhosts"))
             _logger.info("HTTP Createf for %s"%custom_domain)
             #create_vhost(subdomain, custom_domain, odoo_backend, longpolling_backend, docker_vhosts=os.path.join(odoo_saas_data, "docker_vhosts"))
             if ssl_flag:
                 _logger.info("SSL to be done for %s"%custom_domain)
-                run_certbot(custom_domain, client_email=CLIENT_EMAIL, webroot_path=WEBROOT_PATH, dry_run=False)
+                run_certbot(custom_domain, client_email=CLIENT_EMAIL, webroot_path=WEBROOT_PATH, dry_run=False, ssh_conf=ssh_conf)
                 _logger.info("SSL generated")
-                create_vhost_https(subdomain, custom_domain, odoo_backend, longpolling_backend, docker_vhosts=os.path.join(odoo_saas_data, "docker_vhosts"))
+                create_vhost_https(subdomain, custom_domain, odoo_backend, longpolling_backend, ssh_conf, docker_vhosts=os.path.join(odoo_saas_data, "docker_vhosts"))
                 _logger.info("Create HHTPS vhost")
                 #create_vhost_redirect(custom_domain, docker_vhosts=os.path.join(odoo_saas_data, "docker_vhosts"))
             return {

@@ -13,7 +13,8 @@ from collections import defaultdict
 from contextlib import closing
 from configparser import ConfigParser
 from . import saas_client_db
-from .  pg_query import PgQuery 
+from . import client_port_map
+from .  pg_query import PgQuery
 from .. static_saas_kit import SAAS_ODOO_VERSIONS
 
 
@@ -484,6 +485,10 @@ def main(context=None):
 
     _logger.info("----------MAPPING RESULT--------%r", resp)
 
+    ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
+    if not client_port_map.update_client_port_map(ssh_conf, host_domain, port['port']):
+        _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
+
     if resp:
         OdooObject.response['url']  = "http://{}".format(str.lower(host_domain))
     else:
@@ -541,6 +546,9 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable, ssh_host=OdooObject.nginx_ssh_host, ssh_port=OdooObject.nginx_ssh_port, ssh_user=OdooObject.nginx_ssh_user, ssh_key=OdooObject.nginx_ssh_key)
             if NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(OdooObject.template_odoo_port)), "localhost:{}".format(str(OdooObject.template_odoo_lport))):
                 response['url'] = "http://{}".format(str.lower(host_domain))
+                ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
+                if not client_port_map.update_client_port_map(ssh_conf, host_domain, OdooObject.template_odoo_port):
+                    _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
         except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError, Exception) as e:
             _logger.error("Odoo container with name %s couldn't be started. Error: %s"%(OdooObject.odoo_template,e))
 

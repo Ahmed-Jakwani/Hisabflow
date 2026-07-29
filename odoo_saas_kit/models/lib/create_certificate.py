@@ -1,7 +1,9 @@
+import shlex
 import subprocess
 import os
 import socket
 import logging
+import paramiko
 _logger = logging.getLogger(__name__)
 
 """
@@ -52,7 +54,29 @@ def check_ips(custom_domain, subdomain):
         raise Exception("Domain %s not yet mapped. Please make the necessary DNS changes before proceeding!!"%custom_domain)
     return True
 
-def generate_certificate(domain_name, client_email, webroot_path, dry_run):
+def run_on_host_via_ssh(cmd, ssh_host, ssh_port, ssh_user, ssh_key):
+    """
+    nginx and certbot live on the host, not inside the odoo container, so
+    this has to run over SSH rather than local subprocess (mirrors
+    nginx_vhost.execute_on_host_via_ssh in saas_localhost.py).
+    """
+    ssh_obj = paramiko.SSHClient()
+    ssh_obj.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_obj.connect(hostname=ssh_host, port=ssh_port, username=ssh_user, key_filename=ssh_key, timeout=15)
+    try:
+        stdin, stdout, stderr = ssh_obj.exec_command(shlex.join(cmd))
+        returncode = stdout.channel.recv_exit_status()
+        out = stdout.read()
+        err = stderr.read()
+    finally:
+        ssh_obj.close()
+    return {
+        "status": not bool(returncode),
+        "stdout": out.decode(),
+        "stderr": err.decode(),
+    }
+
+def generate_certificate(domain_name, client_email, webroot_path, dry_run, ssh_host=None, ssh_port=22, ssh_user=None, ssh_key=None):
     #path = create_dir()
     cmd = ["sudo", "certbot", "-n", "certonly", "--webroot", "-w", webroot_path]
     cmd.extend(["-d", domain_name])
@@ -61,16 +85,22 @@ def generate_certificate(domain_name, client_email, webroot_path, dry_run):
     else:
         cmd.extend(["--agree-tos", "-m", client_email])
 
+    """
+    Function returns:
+    status: return code of the process, return code > 1 means ERR and < 1 means OK.
+    stdout: stdout of process.
+    stderr: stderr of process.
+    """
+    if ssh_host:
+        try:
+            return run_on_host_via_ssh(cmd, ssh_host, ssh_port, ssh_user, ssh_key)
+        except Exception as e:
+            _logger.error(e)
+            return {"status": False, "stdout": "", "stderr": repr(e)}
+
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
-
-        """
-        Function returns:
-        status: return code of the process, return code > 1 means ERR and < 1 means OK.
-        stdout: stdout of process.
-        stderr: stderr of process.
-        """
         return {
             "status": not bool(proc.returncode),
             "stdout": out.decode(),
