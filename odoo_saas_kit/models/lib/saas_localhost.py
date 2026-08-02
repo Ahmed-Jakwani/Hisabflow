@@ -500,6 +500,18 @@ def main(context=None):
     if not client_port_map.update_client_port_map(ssh_conf, host_domain, port['port']):
         _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
 
+    # A freshly-created container is unreliable for its first ~30-90s (the XML-RPC
+    # login attempts a few lines up routinely fail with "Invalid username or
+    # password" before settling, and the auto-login token's own verification can
+    # spuriously reject a correctly-signed token during this same window) - one
+    # restart after everything else is set up makes the process ready by the time
+    # the client actually receives their login link, instead of intermittently.
+    try:
+        OdooObject.dclient.containers.get(host_domain).restart()
+        OdooObject.wait_for_http("http://localhost:%s"%port['port'], timeout=60, interval=3)
+    except Exception as e:
+        _logger.error("Could not restart %s after setup: %r", host_domain, e)
+
     if resp:
         # Every client is served over HTTPS via the wildcard-clients.hisabflow.tech
         # vhost + the shared wildcard cert - client_url (used for the invitation
