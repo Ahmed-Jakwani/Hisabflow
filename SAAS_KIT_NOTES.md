@@ -260,17 +260,48 @@ find it.
   records in Odoo to see if these correspond to clients stuck in a bad state.
 - **`common-addons_v19`** (mounted into every v19 container as
   `/mnt/extra-addons`) currently has: `app_common`, `app_odoo_customize`,
-  `hf_basic_b2b_theme`, `ica_web_responsive`, `saas_kit_auto_login`. So any
-  SaaS plan module list drawing on modules outside this set can't actually
-  install into client/template containers — only these are visible there.
-  - **Confirmed 2026-08-02**: `om_account_accountant` (added to the B2B plan's
-    module list) is one such module — it exists in the local repo but was
-    never copied to `common-addons_v19`, so every B2B client's registry loads
-    it as `not installable, skipped` (its `ir_module_module` row exists,
-    cloned from the template DB, but the files it points at aren't on disk
-    anywhere). This is a **one-time-per-module deployment step**, separate
-    from (and a prerequisite for) the plan/wizard-level module-install flow
-    below — code can't install a module whose files don't exist on the host.
+  `hf_basic_b2b_theme`, `ica_web_responsive`, `saas_kit_auto_login`,
+  `om_account_accountant` + its full dependency chain (added 2026-08-03, see
+  below). So any SaaS plan module list drawing on modules outside this set
+  can't actually install into client/template containers — only these are
+  visible there.
+  - **Fixed 2026-08-03**: `om_account_accountant` (added to the B2B plan's
+    module list) had this exact problem — existed in the local repo but was
+    never copied to `common-addons_v19`, so every B2B client's registry
+    loaded it as `not installable, skipped`. **Deployed and installed**:
+    copied `om_account_accountant` + its full transitive dependency chain
+    (`accounting_pdf_reports`, `om_account_asset`, `om_account_budget`,
+    `om_fiscal_year`, `om_recurring_payments`, `om_account_daily_reports`,
+    `om_account_followup` — all depend only on core `account`/`mail`, already
+    in base Odoo) to `common-addons_v19`, fixed permissions (extracted as
+    `700`/owner-only from the tar — **must be `chmod -R a+rX` after any
+    future module deploy**, or the container's `odoo` user gets a silent
+    `Permission denied` scanning the folder and just never discovers the
+    module at all, no error surfaced anywhere obvious), restarted every
+    affected container (template `template_basic_b2b_plan_tid_13` + all 5
+    B2B clients: `jakwani-traders`, `mhperfumers`, `sibte-hunain`,
+    `moin-ali`, `ayesha-islam`), called `ir.module.module.update_list()` via
+    XML-RPC on each (**required** — a plain container restart alone does
+    *not* repopulate `ir_module_module` for newly-added module files; only
+    `update_list()` does), then `button_immediate_install()`. Confirmed
+    `state='installed'` in all 6 databases afterward.
+  - **Odoo quirk hit along the way**: `ir.module.module.update_list()` over
+    XML-RPC needed `execute_kw(..., 'update_list', [[]])` (ids arg present)
+    on some databases and `execute_kw(..., 'update_list', [])` (no ids arg)
+    on others — inconsistent across databases running the exact same Odoo
+    version/addons, cause not chased down. Robust approach: try both, use
+    whichever doesn't raise.
+  - **Also discovered while investigating this**: `saas.module.status` rows
+    for this module already said `status='installed'` everywhere *before*
+    any of the above — because `install_module.py`'s `install_modules()`
+    calls erppeek's `client.install(name)`, which silently no-ops (no
+    exception) when asked to install a module Odoo doesn't recognize at all,
+    rather than raising. So the SaaS Kit's own bookkeeping can be
+    confidently wrong in this specific failure mode (module never deployed
+    to `common-addons_v19` at all) — worth hardening `install_modules()` to
+    verify the module was actually found/installed (e.g. re-check
+    `ir.module.module` state after the call) rather than trusting the
+    absence of an exception, but not changed yet (not asked for).
 - **Server-side git clone** (`/opt/odoo19/custom-addons`, used as the
   manager's addons path): remote is `git@github.com:Ahmed-Jakwani/Hisabflow`
   (SSH, vs. local clone's HTTPS remote — just a different auth method, same
