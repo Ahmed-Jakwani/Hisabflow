@@ -186,6 +186,27 @@ def set_user_limt(vals, db_server=None, is_count=None):
     return response
 
 
+def set_base_url(database, base_url, db_server=None):
+    """
+    New client/template databases default web.base.url to whatever address
+    Odoo first saw itself accessed through during creation (e.g.
+    http://localhost:<port>, before nginx/HTTPS is even in the picture) -
+    meaningless outside the container and left uncorrected, so any absolute
+    link Odoo builds (emails, portal/report links, etc.) points nowhere.
+    """
+    pgX = PgQuery(db_server['host'], database, db_server['user'], db_server['password'], db_server['port'])
+    query1 = "Update ir_config_parameter set value ='{}' where key='web.base.url'".format(base_url)
+    with pgX as pg:
+        if not pg.get('status'):
+            return pg
+        result = pgX.executeQuery(query1)
+    response = dict(
+        status=True,
+        result=result
+    )
+    return response
+
+
 def set_contract_expiry(database, is_expired, db_server=None):
     pgX = PgQuery(db_server['host'], database, db_server['user'], db_server['password'], db_server['port'])
     query1 = "Update ir_config_parameter set value ='{}' where key='contract.is_expired'".format(is_expired)

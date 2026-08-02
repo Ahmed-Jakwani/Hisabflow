@@ -256,6 +256,11 @@ class odoo_container:
             # saas_kit_auto_login must be server-wide to be reachable before Odoo has
             # resolved a database for the request (see that addon's controller docstring).
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","server_wide_modules = base,rpc,web,saas_kit_auto_login")
+            # Without this, Odoo ignores the X-Forwarded-Proto header nginx sends and
+            # generates http:// links/redirects even though every client is served over
+            # HTTPS by the wildcard-clients.hisabflow.tech vhost - browsers then flag the
+            # page "Not Secure" (mixed content) despite the connection itself being TLS.
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","proxy_mode = True")
             extra_path = self.mkdir_mnt_extra_addons(name)
             self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%name)
@@ -490,7 +495,11 @@ def main(context=None):
         _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
 
     if resp:
-        OdooObject.response['url']  = "http://{}".format(str.lower(host_domain))
+        # Every client is served over HTTPS via the wildcard-clients.hisabflow.tech
+        # vhost + the shared wildcard cert - client_url (used for the invitation
+        # email link and the "Open Database" auto-login button) must match, or
+        # some flows fetch it directly over http instead of just redirecting.
+        OdooObject.response['url']  = "https://{}".format(str.lower(host_domain))
     else:
         status_checks['domain_mapping'] = False
     OdooObject.response.update(result)
@@ -537,6 +546,10 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             # resolved a database - required here since this container has no dbfilter
             # and serves every plan's template behind one shared hostname.
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","server_wide_modules = base,rpc,web,saas_kit_auto_login")
+            # See the matching comment in run_odoo() - without this Odoo ignores
+            # X-Forwarded-Proto and generates http:// links even behind the HTTPS
+            # wildcard-clients.hisabflow.tech vhost.
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","proxy_mode = True")
 
             OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%OdooObject.odoo_template)
@@ -545,7 +558,7 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
 
             NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable, ssh_host=OdooObject.nginx_ssh_host, ssh_port=OdooObject.nginx_ssh_port, ssh_user=OdooObject.nginx_ssh_user, ssh_key=OdooObject.nginx_ssh_key)
             if NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(OdooObject.template_odoo_port)), "localhost:{}".format(str(OdooObject.template_odoo_lport))):
-                response['url'] = "http://{}".format(str.lower(host_domain))
+                response['url'] = "https://{}".format(str.lower(host_domain))
                 ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
                 if not client_port_map.update_client_port_map(ssh_conf, host_domain, OdooObject.template_odoo_port):
                     _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)

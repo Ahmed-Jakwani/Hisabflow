@@ -542,6 +542,12 @@ class SaasContract(models.Model):
                 try:
                     client_id.fetch_client_url(domain_name)
                     _logger.info("--------Client--Created-------%r", client_id)
+                    if client_id.client_url and client_id.database_name:
+                        try:
+                            _, db_server = obj.server_id.get_server_details()
+                            query.set_base_url(client_id.database_name, client_id.client_url, db_server=db_server)
+                        except Exception as e:
+                            _logger.error("Could not set web.base.url for %s: %r", client_id.database_name, e)
                 except Exception as e:
                     obj.under_process = False
                     self._cr.commit()
@@ -715,6 +721,12 @@ class SaasContract(models.Model):
                 try:
                     client_id.fetch_client_url(domain_name)
                     _logger.info("--------Client--Created-------%r", client_id)
+                    if client_id.client_url and client_id.database_name:
+                        try:
+                            _, db_server = obj.server_id.get_server_details()
+                            query.set_base_url(client_id.database_name, client_id.client_url, db_server=db_server)
+                        except Exception as e:
+                            _logger.error("Could not set web.base.url for %s: %r", client_id.database_name, e)
                 except Exception as e:
                     obj.under_process = False
                     self._cr.commit()
@@ -787,7 +799,6 @@ class SaasContract(models.Model):
         'email_from':emails_from,
         'model':'account.move',
         'res_ids':[int(invoice.id)],
-        'record_name':invoice.name,
         'message_type':'comment',
         'composition_mode':'comment',
         'partner_ids':[invoice.partner_id.id],

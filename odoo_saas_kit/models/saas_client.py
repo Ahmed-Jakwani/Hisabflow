@@ -166,7 +166,9 @@ class SaasClient(models.Model):
                 active_domains = obj.saas_contract_id.custom_domain_ids.filtered(
                     lambda domain: domain.status == "active")
                 if active_domains:
-                    login_base_url = "http://{}".format(active_domains[-1].name)
+                    domain = active_domains[-1]
+                    scheme = "https" if domain.is_ssl_enable else "http"
+                    login_base_url = "{}://{}".format(scheme, domain.name)
 
             if not login_base_url:
                 raise UserError("The client instance does not have a login URL yet.")
