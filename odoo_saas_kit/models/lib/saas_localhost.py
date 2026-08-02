@@ -261,6 +261,12 @@ class odoo_container:
             # HTTPS by the wildcard-clients.hisabflow.tech vhost - browsers then flag the
             # page "Not Secure" (mixed content) despite the connection itself being TLS.
             self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","proxy_mode = True")
+            # Every client shares one Postgres server, and Odoo's default per-process
+            # connection pool (db_maxconn=64) adds up fast across many low-traffic
+            # client containers - left unset, this is how the shared server ran out of
+            # connections ("FATAL: sorry, too many clients already") with barely a
+            # handful of clients running.
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_maxconn = 4")
             extra_path = self.mkdir_mnt_extra_addons(name)
             self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%name)
@@ -550,6 +556,9 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             # X-Forwarded-Proto and generates http:// links even behind the HTTPS
             # wildcard-clients.hisabflow.tech vhost.
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","proxy_mode = True")
+            # See the matching comment in run_odoo() re: shared Postgres connection
+            # exhaustion across many low-traffic containers.
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_maxconn = 4")
 
             OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%OdooObject.odoo_template)
