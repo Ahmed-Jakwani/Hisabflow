@@ -63,18 +63,19 @@ class AddModuleToPlan(models.TransientModel):
             except Exception as e:
                 _logger.error("Could not install %s on client %s: %r", module.technical_name, client.name, e)
                 failures.append("%s: %s" % (client.name, e))
+                continue
+            # Same reasoning as the template restart in install_remaining_modules() -
+            # the RPC install only updates this client's database; its own running
+            # container needs a restart to actually show the module's menus/assets.
+            try:
+                client.restart_client()
+            except Exception as e:
+                _logger.error("Installed %s on client %s but could not restart its container: %r", module.technical_name, client.name, e)
 
         msg = "Module <b>%s</b> added to the plan" % module.name
         msg += " and installed on: %s." % ", ".join(installed_on) if installed_on else "."
         if failures:
             msg += "<br/>Failed on: %s" % "; ".join(failures)
-        # The install RPC only updates the database - an already-running container's
-        # process doesn't reload its own module/asset registry from that, so the
-        # module can look "installed" yet remain invisible until the container that
-        # actually serves that database is restarted (docker restart <container>).
-        msg += ("<br/><i>Note: the template container and each affected client container "
-                "may need a restart (docker restart) before this module's UI/assets actually "
-                "show up for users - installing it here only updates the database.</i>")
         plan.message_post(body=msg)
 
         if failures:

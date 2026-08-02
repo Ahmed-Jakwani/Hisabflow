@@ -393,6 +393,14 @@ class SaasPlans(models.Model):
                             module.status="installed"
                             if not self.get_installable_modules():
                                 self.is_all_installed=True
+                        # The RPC install above only touches the template's database -
+                        # its running container process won't show the new module's
+                        # menus/assets until it reloads its registry. Restart it here so
+                        # the module is actually visible without a manual step.
+                        try:
+                            self.restart_db_template()
+                        except Exception as e:
+                            _logger.error("Installed but could not restart template container for plan %s: %r", self.display_name, e)
                     else:
                         msg = response.get('msg', 'Connection Failure')
                         if msg:
