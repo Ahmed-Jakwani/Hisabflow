@@ -288,11 +288,11 @@ class SaasPlans(models.Model):
                 # `db` must be passed as a query param so Odoo's HTTP layer dispatches
                 # to the right database BEFORE routing; the db embedded in the signed
                 # token itself only gets checked *after* dispatch, inside the controller.
-                login_url = "http://{}/saas_kit/auto_login/{}?{}".format(
+                login_url = "https://{}/saas_kit/auto_login/{}?{}".format(
                     template_host, token, urlencode({'db': obj.db_template}))
             except Exception as e:
                 self.print_logs('error', 'Could not build auto-login token: %r' % e, '279')
-                login_url = "http://{}/web/login?{}".format(
+                login_url = "https://{}/web/login?{}".format(
                     template_host, urlencode({'db': obj.db_template}))
             return {
                 'type': 'ir.actions.act_url',
@@ -461,10 +461,22 @@ class SaasPlans(models.Model):
                         obj.db_template = db_template_name
                         obj.state = 'confirm'
                         obj.container_id = response.get('container_id', False)
+                        # response['status']=True only means the DB itself got created -
+                        # the RPC module-install step (a separate connection to the fresh
+                        # DB) can fail independently (e.g. transient connect failure right
+                        # after DB creation) without raising, so don't blindly trust every
+                        # module as installed - this exact silent-lie pattern already bit
+                        # om_account_accountant once (see SAAS_KIT_NOTES.md) and just bit
+                        # saas_kit_auto_login on a fresh plan the same way.
+                        result = response.get('result') or {}
+                        modules_missed = result.get('modules_missed', []) if isinstance(result, dict) else []
                         for module in installable_modules:
-                            module.status="installed"
+                            if module.technical_name not in modules_missed:
+                                module.status = "installed"
                             if not self.get_installable_modules():
                                 self.is_all_installed=True
+                        if modules_missed:
+                            obj.message_post(body="Warning: these modules could NOT be installed into the template database and were left uninstalled (install them manually if needed): {}".format(", ".join(modules_missed)))
 
                     else:
                         msg = response.get('msg', False)
@@ -494,11 +506,45 @@ class SaasPlans(models.Model):
     def unlink(self):
         """
             Unlink of no contrac is associated with the plan
+
+            Also tears down the plan's own db_template - a plan's template
+            database (and its filestore) lives inside the one shared
+            per-version template container, so unlike saas.client there is
+            no container/data-dir of its own to remove, just the database
+            and its filestore subfolder within that shared container.
         """
-        
+
         for obj in self:
             if obj.contract_count:
                 raise UserError("Error: You must delete the associated SaaS Contracts first!")
+
+        module_path = get_module_resource('odoo_saas_kit')
+        for obj in self:
+            if not (obj.db_template and obj.server_id):
+                continue
+            try:
+                host_server, db_server = obj.server_id.get_server_details()
+            except Exception as e:
+                obj.print_logs('error', 'Could not resolve server details during unlink: %r' % e, '494')
+                continue
+
+            try:
+                query.drop_database(obj.db_template, db_server=db_server)
+            except Exception as e:
+                obj.print_logs('error', 'Could not drop template database %r during unlink: %r' % (obj.db_template, e), '494')
+
+            if obj.container_id:
+                try:
+                    client.update_values(module_path)
+                    if host_server.get('server_type') == 'self':
+                        client.delete_template_filestore(obj.container_id, obj.db_template)
+                    else:
+                        ssh_obj = client.login_remote(host_server)
+                        if ssh_obj:
+                            client.delete_remote_template_filestore(obj.container_id, obj.db_template, ssh_obj)
+                except Exception as e:
+                    obj.print_logs('error', 'Could not delete template filestore for %r during unlink: %r' % (obj.db_template, e), '494')
+
         return super(SaasPlans, self).unlink()
 
     @api.model_create_multi

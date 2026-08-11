@@ -260,12 +260,48 @@ class SaasClient(models.Model):
                 raise UserError("Can't Inactive a Running Client") 
 
     def unlink(self):
-       for obj in self:
-          if obj.state == 'cancel':
-              res = super(SaasClient, self).unlink()
-          else:
-              raise UserError("Can't Delete Instances")
-       return res
+        for obj in self:
+            if obj.state != 'cancel':
+                raise UserError("Can't Delete Instances")
+
+        module_path = get_module_resource('odoo_saas_kit')
+        for obj in self:
+            host_server, db_server = (None, None)
+            if obj.saas_contract_id and obj.saas_contract_id.server_id:
+                host_server, db_server = obj.saas_contract_id.server_id.get_server_details()
+
+            if obj.container_id and host_server:
+                if not containers.action(operation="remove", container_id=obj.container_id, host_server=host_server, db_server=db_server):
+                    obj.print_logs('error', 'Could not remove container %r during unlink' % obj.container_id, '265')
+
+            if obj.database_name and db_server:
+                try:
+                    query.drop_database(obj.database_name, db_server=db_server)
+                except Exception as e:
+                    obj.print_logs('error', 'Could not drop database %r during unlink: %r' % (obj.database_name, e), '265')
+
+            if obj.container_name and host_server:
+                try:
+                    client.update_values(module_path)
+                    if host_server.get('server_type') == 'self':
+                        client.delete_data_dir(obj.container_name)
+                    else:
+                        ssh_obj = client.login_remote(host_server)
+                        if ssh_obj:
+                            client.delete_remote_data_dir(obj.container_name, ssh_obj)
+                except Exception as e:
+                    obj.print_logs('error', 'Could not delete data dir for %r during unlink: %r' % (obj.container_name, e), '265')
+
+            # NOTE: the client's entry in nginx's client-ports.conf map (see
+            # client_port_map.py) is deliberately NOT removed here - the
+            # nginx_deploy SSH key is locked to a forced command that only
+            # supports adding/updating a hostname's port, not removing a
+            # line, by design (see SAAS_KIT_NOTES.md). A stale map entry
+            # just points at a port nothing listens on (connection refused),
+            # it isn't reachable/exploitable, so this is left as a known,
+            # deliberate gap rather than widening that forced command.
+
+        return super(SaasClient, self).unlink()
 
     def drop_db(self):
         for obj in self:

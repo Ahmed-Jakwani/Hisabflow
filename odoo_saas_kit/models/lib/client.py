@@ -99,38 +99,52 @@ def delete_nginx_vhost(domain):
 
 def delete_remote_data_dir(domain,ssh_obj):
     path = '{}/{}'.format(data_dir,domain)
-    _logger.info("Data dir is %s"%path) 
-    sftp = ssh_obj.open_sftp()
-    if "odoo-server.conf" in sftp.listdir(path):#os.path.exists(path+"/odoo-server.conf"):
-        try:
-            ver = oversion + ".0"
-            if ver in sftp.listdir(path+"/data-dir/addons/"):#os.path.exists(path+"/data-dir/addons/12.0"): 
-                _logger.info("Permissions of Odoo addons/%s"%ver)
-                sftp.chmod(path+"/data-dir/addons/"+ver,0o700)
-            execute_on_remote_shell(ssh_obj,"rm -rf %s"%path)
-            return True
-        except Exception as error:
-            _logger.error("Error deleting %r data dir %r"%(domain,error))
-    else:
+    _logger.info("Data dir is %s"%path)
+    try:
+        execute_on_remote_shell(ssh_obj,"rm -rf %s"%path)
         return True
-    return False
+    except Exception as error:
+        _logger.error("Error deleting %r data dir %r"%(domain,error))
+        return False
 
 def delete_data_dir(domain):
     path = '{}/{}'.format(data_dir,domain)
     _logger.info("$$$$$ %r "%path)
-    if os.path.exists(path+"/odoo-server.conf"):
-        try:
-            ver = oversion + ".0"
-            if os.path.exists(path+"/data-dir/addons/"+ver):
-                _logger.info("Permissions of Odoo addons/%s"%ver)
-                os.chmod(path+"/data-dir/addons/"+ver,0o700)
-            shutil.rmtree(path)
-            return True
-        except Exception as error:
-            _logger.error("Error deleting %r data dir %r"%(domain,error))
-    else:
+    if not os.path.exists(path):
         return True
-    return False
+    try:
+        shutil.rmtree(path)
+        return True
+    except Exception as error:
+        _logger.error("Error deleting %r data dir %r"%(domain,error))
+        return False
+
+def delete_template_filestore(container_name, db_template):
+    """
+    Templates don't get their own container/data dir - every plan's template
+    DB lives inside the one shared per-version template container
+    (e.g. odoo19_template_cont), under its data-dir/filestore/<db_template>.
+    Dropping the Postgres database alone leaves this filestore (attachments,
+    module icons, etc.) orphaned on disk - clean it up too.
+    """
+    path = '{}/{}/data-dir/filestore/{}'.format(data_dir, container_name, db_template)
+    if not os.path.exists(path):
+        return True
+    try:
+        shutil.rmtree(path)
+        return True
+    except Exception as error:
+        _logger.error("Error deleting template filestore %r %r"%(db_template,error))
+        return False
+
+def delete_remote_template_filestore(container_name, db_template, ssh_obj):
+    path = '{}/{}/data-dir/filestore/{}'.format(data_dir, container_name, db_template)
+    try:
+        execute_on_remote_shell(ssh_obj,"rm -rf %s"%path)
+        return True
+    except Exception as error:
+        _logger.error("Error deleting remote template filestore %r %r"%(db_template,error))
+        return False
 
 
 def reload_nginx():

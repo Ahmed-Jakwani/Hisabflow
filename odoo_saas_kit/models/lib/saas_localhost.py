@@ -608,6 +608,20 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
 
         response['result'] = result
         response['status'] = True
+
+        # Same "restart once after setup" fix already applied to per-client containers
+        # in run_odoo() - a freshly created database's auto-login token can be
+        # spuriously rejected by this long-running shared container until it's
+        # restarted once (confirmed by replaying the exact same valid, non-expired
+        # token immediately after a restart - it then succeeds; root cause not fully
+        # chased into Odoo internals, see SAAS_KIT_NOTES.md). This restart briefly
+        # affects every other plan's template sharing this container, but only runs
+        # on the relatively rare "Create DB Template" action, not on every login.
+        try:
+            OdooObject.dclient.containers.get(OdooObject.odoo_template).restart()
+            OdooObject.wait_for_http("http://localhost:%s"%OdooObject.template_odoo_port, timeout=60, interval=3)
+        except Exception as e:
+            _logger.error("Could not restart %s after template creation: %r", OdooObject.odoo_template, e)
     else:
         response.update({'status': False,'msg': "Couldn't Create DB. Please ensure that template server is running, you may need to restart it once!!",})
 

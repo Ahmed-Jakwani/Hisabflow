@@ -24,10 +24,20 @@ def read_secret(config_path, key):
     return parser.get("options", key)
 
 
-def build_token(secret, db, uid=2, ttl_seconds=120):
+def build_token(secret, db, uid=2, ttl_seconds=600):
     """
     `uid` defaults to 2 (the database admin user) - the same convention already used
     elsewhere in this module (see query.get_credentials(), `WHERE id=2`).
+
+    ttl_seconds defaults to 600, not 120 - the real round trip for a "Login" button
+    click is: RPC call to build this token, browser opens a new tab, DNS/TLS, the
+    http->https redirect, then ensure_db()'s own cookie-pinning redirect, before the
+    token is ever actually checked. Over real internet latency (as opposed to
+    server-local testing) that can burn well over 120s on its own, causing a
+    perfectly validly-signed, just-built token to read as "expired" - confirmed by
+    reproducing this exact click and finding a valid signature that expired by only
+    ~16s. 600s is still short-lived/effectively single-use in practice, just not
+    razor-thin against realistic latency.
     """
     payload = {"db": db, "uid": uid, "exp": int(time.time()) + ttl_seconds}
     message = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()

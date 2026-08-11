@@ -50,11 +50,16 @@ def action(operation = None,container_id = None, host_server = None, db_server =
     dock.get_client(host = "localhost" if isitlocal else host_server['host'])
     cont = dock.get_container(container_id)
     if not cont:
-        return False
+        # For 'remove' this is idempotent success (nothing left to clean up,
+        # e.g. already removed manually or a retried unlink()) - but for
+        # start/stop/restart a missing container is a real error, so keep
+        # surfacing that as failure.
+        return operation == 'remove'
     dispatch = {
         'start': cont.start,
         'stop': cont.stop,
         'restart': cont.restart,
+        'remove': lambda: cont.remove(force=True),
         }
     if operation == 'restart':
         return start_container(container_id, host = "localhost" if isitlocal else host_server['host'])

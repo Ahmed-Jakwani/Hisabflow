@@ -220,6 +220,34 @@ def set_contract_expiry(database, is_expired, db_server=None):
     )
     return response
 
+
+def drop_database(database, db_server=None):
+    """
+    Drop a client/template database directly via Postgres rather than the
+    container's own XML-RPC db.drop - this still works even if the container
+    has already been stopped/removed (unlink() removes the container first),
+    and avoids depending on the legacy unversioned /xmlrpc/db endpoint.
+    Connects to the `postgres` maintenance DB, same pattern as is_db_exist().
+    """
+    pgX = PgQuery(db_server['host'], "postgres", db_server['user'], db_server['password'], db_server['port'])
+    with pgX as pg:
+        if not pg.get('status'):
+            return pg
+        pgX.dbConnection.autocommit = True
+        # DROP DATABASE fails with "database is being accessed by other users"
+        # if anything (a lingering container, a stale pool connection) still
+        # holds a session against it - terminate those first.
+        pgX.executeQuery(
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+            "WHERE datname = '{}' AND pid <> pg_backend_pid();".format(database)
+        )
+        result = pgX.executeQuery('DROP DATABASE IF EXISTS "{}";'.format(database))
+    response = dict(
+        status=True,
+        result=result
+    )
+    return response
+
 # if __name__=='__main__':
 #     data = {
 #       'database': 'template_test_plan_tid_31',
