@@ -31,16 +31,23 @@ class AddModuleToPlan(models.TransientModel):
             raise UserError("%s is already part of this plan." % module.name)
 
         # Triggers saas.plan.write()'s existing handling, which creates the matching
-        # saas.module.status(plan_id=..., status='uninstalled') row for us.
+        # saas.module.status(plan_id=..., status='uninstalled') row and (since this
+        # touches saas_module_ids) syncs the plan's contracts via
+        # saas.plan.sync_contract_modules(), so clients created later inherit it too.
         plan.write({'saas_module_ids': [(4, module.id)]})
 
         if plan.state == 'confirm' and plan.db_template:
             plan.install_remaining_modules()
 
-        clients = self.env['saas.client'].search([
+        all_clients = self.env['saas.client'].search([
             ('saas_contract_id.plan_id', '=', plan.id),
-            ('state', '=', 'started'),
         ])
+        clients = all_clients.filtered(lambda c: c.state == 'started')
+        # A stopped/inactive client can't be installed into over XML-RPC - its
+        # container isn't listening. Previously those were skipped in silence, so the
+        # module was reported as rolled out while some clients never received it. Name
+        # them instead, so they can be started and topped up deliberately.
+        deferred = all_clients - clients
 
         installed_on = []
         failures = []
@@ -73,7 +80,12 @@ class AddModuleToPlan(models.TransientModel):
                 _logger.error("Installed %s on client %s but could not restart its container: %r", module.technical_name, client.name, e)
 
         msg = "Module <b>%s</b> added to the plan" % module.name
-        msg += " and installed on: %s." % ", ".join(installed_on) if installed_on else "."
+        msg += (" and installed on: %s." % ", ".join(installed_on)) if installed_on else "."
+        if deferred:
+            msg += ("<br/>Not installed on these clients because they are not running "
+                    "(start them, then use the Install button on the client's SaaS "
+                    "Modules tab): %s" % ", ".join(
+                        "%s [%s]" % (c.name, c.state) for c in deferred))
         if failures:
             msg += "<br/>Failed on: %s" % "; ".join(failures)
         plan.message_post(body=msg)

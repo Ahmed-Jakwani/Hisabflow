@@ -611,6 +611,7 @@ class SaasPlans(models.Model):
 
         #  ================FIX===========================
         if vals.get('saas_module_ids'):
+            self.sync_contract_modules()
             self.create_status_modules()
             for rec in self.modules_status_ids:
                 module_status_unlink_list = []
@@ -621,6 +622,31 @@ class SaasPlans(models.Model):
                     self.is_all_installed = False
                 self.env['saas.module.status'].browse(module_status_unlink_list).unlink()
         return res
+
+    def sync_contract_modules(self):
+        """
+        Push this plan's module list onto its live contracts.
+
+        A contract takes a one-off SNAPSHOT of the plan's modules when it is created
+        (`saas_module_ids = [(6, 0, plan.saas_module_ids.ids)]`, in both
+        contract_creation_wizard and sale.py) and nothing ever refreshed it again -
+        not editing the plan, and not even the "Add Module" wizard, which updated the
+        plan and the per-client status rows but never the contract in between. So a
+        contract's module list silently drifted away from its plan's, and since
+        saas.client.attach_modules() builds its status rows from the CONTRACT, a
+        module added to a plan would never reach a client created afterwards either.
+
+        Cancelled contracts are left alone - their snapshot is a historical record.
+        """
+        for obj in self:
+            contracts = self.env['saas.contract'].search([
+                ('plan_id', '=', obj.id),
+                ('state', 'not in', ('cancel',)),
+            ])
+            if contracts:
+                contracts.write({'saas_module_ids': [(6, 0, obj.saas_module_ids.ids)]})
+                _logger.info("Synced plan %s module list onto %s contract(s)",
+                             obj.id, len(contracts))
 
     def drop_template(self):
         for obj in self:

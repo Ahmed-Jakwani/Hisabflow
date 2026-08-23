@@ -27,8 +27,15 @@ class ModuleStatus(models.Model):
     module_id = fields.Many2one(comodel_name="saas.module", string="Module")
     technical_name = fields.Char(string="Technical Name", related="module_id.technical_name", readonly=True)
     status = fields.Selection(selection=MODULE_STATUS, default="uninstalled")
-    client_id = fields.Many2one(comodel_name="saas.client", string="SaaS Client")
-    plan_id = fields.Many2one(comodel_name="saas.plan", string="SaaS Plan")
+    # ondelete='cascade' on both: these rows are pure bookkeeping about one client or
+    # one plan and are meaningless without it. Without a cascade the FK defaulted to
+    # SET NULL, so deleting a client or plan left the rows behind pointing at nothing -
+    # the live manager database had accumulated 131 such orphans. They aren't merely
+    # untidy: saas.module.unlink() refuses to delete a module while ANY status row
+    # references it, so an orphan row makes a module undeletable with the thoroughly
+    # misleading "Delete the linked client first" for a client that no longer exists.
+    client_id = fields.Many2one(comodel_name="saas.client", string="SaaS Client", ondelete='cascade')
+    plan_id = fields.Many2one(comodel_name="saas.plan", string="SaaS Plan", ondelete='cascade')
 
     def install_module(self):
         for obj in self:
