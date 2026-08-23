@@ -625,6 +625,25 @@ class SaasPlans(models.Model):
                 self.env['saas.module.status'].browse(module_status_unlink_list).unlink()
         return res
 
+    def _admin_login_for(self, db_name):
+        """
+        The actual login of user id 2 in `db_name`, read straight from that database.
+
+        Not `container_user`: set_user_data() renames user id 2 to the customer's own
+        email on every real client, so container_user only ever matches a template (and
+        only one provisioned since the last credential rotation).
+        """
+        host_server, db_server = self.server_id.get_server_details()
+        try:
+            response = query.get_credentials(db_name, host_server=host_server, db_server=db_server)
+        except Exception as e:
+            _logger.error("Could not read admin login for %s: %r", db_name, e)
+            return None
+        if not response.get('status') or not response.get('result'):
+            _logger.error("Could not read admin login for %s: %r", db_name, response.get('message'))
+            return None
+        return response['result'][0][0]
+
     def _reconcile_one_db(self, odoo_url, db_name, entitled, common_addons_path):
         """
         Bring ONE database in line with `entitled`: install what's missing, hide the
@@ -633,10 +652,16 @@ class SaasPlans(models.Model):
         Returns a dict, or None if the database couldn't be reached at all.
         """
         config_path = get_module_resource('odoo_saas_kit')
-        login = auto_login_token.read_secret(config_path, "container_user")
-        password = auto_login_token.read_secret(config_path, "container_passwd")
 
-        rpc = saas_client_db.connect_db(odoo_url, db_name, login, password, flag=False)
+        # The login has to come from the database itself, not from container_user:
+        # set_user_data() renames user id 2 to the customer's own email on every real
+        # client, so container_user is not a valid login there. And the password has
+        # to be tried against every known container password, because rotating
+        # container_passwd does not re-key already-provisioned databases.
+        login = self._admin_login_for(db_name)
+        if not login:
+            return None
+        rpc, _passwd = saas_client_db.connect_admin(odoo_url, db_name, login, config_path)
         if not rpc:
             _logger.error("Could not connect to %s at %s to reconcile modules", db_name, odoo_url)
             return None

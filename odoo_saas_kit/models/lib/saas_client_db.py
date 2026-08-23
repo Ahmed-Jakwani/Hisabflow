@@ -11,6 +11,7 @@ from collections import defaultdict
 import socket
 
 from contextlib import closing
+from configparser import ConfigParser
 #from . import pg_query
 from . import module_visibility
 _logger = logging.getLogger(__name__)
@@ -102,6 +103,58 @@ def create_new(client,database_name,user,passwd,admin_passwd): #send Odoo admin 
 
 #: `ir.module.module.state` values that mean "this module's code is active in the DB".
 INSTALLED_STATES = ('installed', 'to upgrade')
+
+
+def candidate_passwords(config_path):
+    """
+    Every password that might authenticate a SaaS-provisioned admin user, newest first.
+
+    Rotating `container_passwd` in saas.conf does NOT re-key databases that were
+    already provisioned - their `res_users` row keeps the hash of whatever password
+    was current at creation time. So after a rotation, every management RPC into an
+    older client or template fails with "Invalid username or password", surfacing as
+    the generic "Connection Failure" from install_remaining_modules() and as a failed
+    per-client Install button. Verified on the live deployment: two clients and one
+    plan template still only accepted the pre-rotation password.
+
+    `container_passwd_legacy` (optional, comma-separated, oldest last) lets an
+    operator record the rotation instead of silently losing access to everything
+    provisioned before it.
+    """
+    parser = ConfigParser()
+    parser.read(config_path + "/models/lib/saas.conf")
+    passwords = [parser.get("options", "container_passwd")]
+    legacy = parser.get("options", "container_passwd_legacy", fallback="")
+    passwords.extend(p.strip() for p in legacy.split(",") if p.strip())
+    return passwords
+
+
+def try_connect(url, database, login, passwd):
+    """Single-shot erppeek connect - no retry loop. Returns a client or None."""
+    try:
+        return erppeek.Client(server=str(url), db=database, user=login, password=passwd)
+    except Exception as e:
+        _logger.debug("Connect to %s as %r failed: %r", database, login, e)
+        return None
+
+
+def connect_admin(url, database, login, config_path):
+    """
+    Connect to `database` as its provisioned admin user, trying each candidate
+    password in turn. Returns (client, password_used) or (None, None).
+
+    `login` must be the database's ACTUAL user-id-2 login, not `container_user`:
+    set_user_data() renames that user to the customer's own email when a client is
+    created, so container_user stops being a valid login on every real client.
+    """
+    for passwd in candidate_passwords(config_path):
+        client = try_connect(url, database, login, passwd)
+        if client:
+            return client, passwd
+    _logger.error("Could not authenticate into %s as %r with any known container "
+                  "password - if container_passwd was rotated, add the previous value "
+                  "to container_passwd_legacy in saas.conf", database, login)
+    return None, None
 
 
 def module_states(client, modules):

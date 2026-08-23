@@ -52,21 +52,33 @@ class ModuleStatus(models.Model):
                 login = response[0][0]
                 # NOTE: response[0][1] is res_users.password - a HASH, not the real
                 # password, and can never authenticate over XML-RPC. The real,
-                # working password for every client's admin user is `container_passwd`
-                # (see odoo_container.create_db() - it's what the account was actually
-                # created with; set_user_data() only ever changes `login`, never this).
-                password = auto_login_token.read_secret(
-                    get_module_resource('odoo_saas_kit'), "container_passwd")
+                # working password is whichever `container_passwd` was current when
+                # this database was provisioned (see odoo_container.create_db();
+                # set_user_data() only ever changes `login`, never the password).
+                # Rotating container_passwd does NOT re-key existing databases, so
+                # try every known value - see saas_client_db.candidate_passwords().
+                config_path = get_module_resource('odoo_saas_kit')
             else:
                 raise UserError("ERR001: "+str(response.get('message')))
-            
+
             endpoint = str(host_server.get('host')) if (host_server['server_type'] == 'remote') else "localhost"
             saas_port = obj.client_id.containter_port
+            odoo_url = "http://{}:{}".format(endpoint, saas_port)
+
+            rpc, password = saas_client_db.connect_admin(
+                odoo_url, obj.client_id.database_name, login, config_path)
+            if not rpc:
+                raise UserError(
+                    "Could not authenticate into %s as %s.\n\n"
+                    "This database was provisioned with an older container password. "
+                    "Add the previous value to `container_passwd_legacy` in "
+                    "odoo_saas_kit/models/lib/saas.conf (comma-separated, oldest last)."
+                    % (obj.client_id.database_name, login))
 
             data = dict(
                 operation="install",
                 #odoo_url=obj.client_id.client_url,
-                odoo_url="http://{}:{}".format(endpoint, saas_port),
+                odoo_url=odoo_url,
                 odoo_username=login,
                 odoo_password=password,
                 database_name=obj.client_id.database_name,
