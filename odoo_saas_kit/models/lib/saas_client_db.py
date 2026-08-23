@@ -157,6 +157,35 @@ def connect_admin(url, database, login, config_path):
     return None, None
 
 
+def update_module_list(client):
+    """
+    Make the target Odoo re-scan its addons path (Apps > Update Apps List).
+
+    Do NOT use erppeek's `client.model('ir.module.module').update_list()`: it sends
+    the call with no positional arguments, and Odoo's XML-RPC entry point does
+
+        ids, args = args[0], args[1:]        # odoo/service/model.py, call_kw
+
+    so it dies with `IndexError: list index out of range` before update_list() is
+    ever reached. Passing an explicit empty ids list is what works. Odoo databases
+    have been observed to disagree about which of the two forms they accept (see
+    SAAS_KIT_NOTES.md), so try both and take whichever doesn't raise.
+
+    Returns True if one of them succeeded.
+    """
+    for args in ([[]], []):
+        try:
+            client.execute('ir.module.module', 'update_list', *args)
+            _logger.info("ir.module.module.update_list() succeeded (%s positional arg(s))",
+                         len(args))
+            return True
+        except Exception as e:
+            last_error = e
+    _logger.warning("ir.module.module.update_list() failed in both call forms, "
+                    "continuing anyway: %r", last_error)
+    return False
+
+
 def module_states(client, modules):
     """
     Return {module_name: state} for `modules`, straight out of ir_module_module.
@@ -218,13 +247,11 @@ def install_modules(client, modules=None):
     if not modules:
         return (True, [])
 
-    # Re-scan the addons path first. A module whose files were only just copied into
-    # common-addons_v* has no ir_module_module row yet, and every install attempt
-    # against it would fail as "not found" until update_list() runs.
-    try:
-        client.model('ir.module.module').update_list()
-    except Exception as e:
-        _logger.warning("ir.module.module.update_list() failed, continuing anyway: %r", e)
+    # Re-scan the addons path first. This is load-bearing in two cases: a module whose
+    # files were only just copied into common-addons_v*, and a module whose
+    # ir_module_module row was REMOVED by entitlement enforcement and is now being
+    # granted. In both, nothing can be installed until update_list() re-creates the row.
+    update_module_list(client)
 
     known = {}
     try:
