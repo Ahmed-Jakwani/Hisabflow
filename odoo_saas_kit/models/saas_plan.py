@@ -14,6 +14,7 @@ from .compat import get_module_resource, is_new_id
 from . lib import query
 from . lib import saas
 from . lib import auto_login_token
+from . lib import hostnames
 import logging
 import time
 import os
@@ -278,8 +279,8 @@ class SaasPlans(models.Model):
         """
 
         for obj in self:
-            template_host = "db{}_templates.{}".format(
-                SAAS_ODOO_VERSION.split('.', 1)[0], obj.saas_base_url)
+            template_host = hostnames.db_template_host(
+                SAAS_ODOO_VERSION, obj.saas_base_url)
             try:
                 secret = auto_login_token.read_secret(
                     get_module_resource('odoo_saas_kit'), "template_master")
@@ -469,12 +470,24 @@ class SaasPlans(models.Model):
                         # om_account_accountant once (see SAAS_KIT_NOTES.md) and just bit
                         # saas_kit_auto_login on a fresh plan the same way.
                         result = response.get('result') or {}
-                        modules_missed = result.get('modules_missed', []) if isinstance(result, dict) else []
+                        if isinstance(result, dict):
+                            modules_missed = result.get('modules_missed') or []
+                        else:
+                            # Not a result dict, so the install step never reported
+                            # anything we can trust. Treat EVERY module as not installed
+                            # rather than as installed: the old code defaulted this to []
+                            # and so marked everything 'installed' off a bare string
+                            # ("alreadyexists"), which is precisely how both live plan
+                            # templates ended up with all-green bookkeeping and none of
+                            # their modules actually present.
+                            _logger.warning("create_db_template returned a non-dict result %r - "
+                                            "treating all modules as not installed", result)
+                            modules_missed = list(modules)
                         for module in installable_modules:
                             if module.technical_name not in modules_missed:
                                 module.status = "installed"
-                            if not self.get_installable_modules():
-                                self.is_all_installed=True
+                        if not obj.get_installable_modules():
+                            obj.is_all_installed = True
                         if modules_missed:
                             obj.message_post(body="Warning: these modules could NOT be installed into the template database and were left uninstalled (install them manually if needed): {}".format(", ".join(modules_missed)))
 

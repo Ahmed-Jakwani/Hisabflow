@@ -24,7 +24,55 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import time
+from configparser import ConfigParser
+
+_logger = logging.getLogger(__name__)
+
+
+def get_signing_secret():
+    """
+    Return the plaintext `admin_passwd` this container was configured with.
+
+    Read it from the config FILE ON DISK, not from `odoo.tools.config`. Odoo 19's
+    config.verify_admin_password() does:
+
+        result, updated_hash = crypt_context.verify_and_update(password, stored_hash)
+        if result:
+            if updated_hash:
+                self.options['admin_passwd'] = updated_hash
+
+    (odoo/tools/config.py) - i.e. the first time ANY database-manager operation
+    authenticates with the master password, Odoo silently replaces the in-memory
+    plaintext with a pbkdf2 hash. The SaaS Kit manager performs exactly those
+    operations against these containers all the time (create_database,
+    duplicate_database, drop). So from the first one onwards,
+    tools.config.get('admin_passwd') no longer equals the plaintext that the
+    manager side signs tokens with, every signature comparison fails, and the
+    "Login" button silently falls back to a plain login page - until the
+    container happens to be restarted, which reloads the plaintext from disk.
+
+    That is exactly the "auto-login works right after a restart, then stops"
+    behaviour this addon was suffering from. The file on disk is never rewritten
+    by verify_and_update, so it stays authoritative.
+    """
+    from odoo.tools import config  # imported late: keeps this module importable standalone
+
+    rcfile = getattr(config, 'rcfile', None)
+    if rcfile:
+        try:
+            parser = ConfigParser()
+            parser.read(rcfile)
+            value = parser.get('options', 'admin_passwd', fallback=None)
+            if value:
+                return value
+        except Exception as e:  # unreadable/malformed config - fall through
+            _logger.warning("Could not read admin_passwd from %s: %r", rcfile, e)
+
+    # Fallback: the in-memory value. Correct until the first master-password
+    # verification in this process, so this is never worse than the old behaviour.
+    return config.get('admin_passwd')
 
 
 def verify_token(secret, token, expected_db):

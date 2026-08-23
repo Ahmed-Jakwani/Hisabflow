@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from odoo import http, tools
+from odoo import http
 from odoo.http import request
 from odoo.addons.web.controllers.utils import ensure_db
 
-from ..tools import verify_token
+from ..tools import get_signing_secret, verify_token
 
 _logger = logging.getLogger(__name__)
 
@@ -34,7 +34,10 @@ class SaasKitAutoLogin(http.Controller):
         ensure_db()  # may abort() with a redirect - if so, everything below is skipped
 
         db = request.db
-        secret = tools.config.get('admin_passwd')
+        # NOT tools.config.get('admin_passwd') - Odoo 19 replaces that in-memory
+        # value with a pbkdf2 hash after the first master-password verification,
+        # which silently breaks every token from then on. See tools.py.
+        secret = get_signing_secret()
 
         payload = verify_token(secret, token, db) if secret else None
         if not payload:

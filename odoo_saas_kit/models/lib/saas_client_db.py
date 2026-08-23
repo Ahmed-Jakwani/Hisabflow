@@ -12,6 +12,7 @@ import socket
 
 from contextlib import closing
 #from . import pg_query
+from . import module_visibility
 _logger = logging.getLogger(__name__)
 
 #operation = "create" #clone/create
@@ -99,21 +100,134 @@ def create_new(client,database_name,user,passwd,admin_passwd): #send Odoo admin 
     return True
 
 
-def install_modules(client,modules = []):
-    modules_missed = []
-    for each in modules:
+#: `ir.module.module.state` values that mean "this module's code is active in the DB".
+INSTALLED_STATES = ('installed', 'to upgrade')
+
+
+def module_states(client, modules):
+    """
+    Return {module_name: state} for `modules`, straight out of ir_module_module.
+
+    Uses search_read rather than erppeek's `client.read(model, domain, 'state')`
+    convenience: with a single field name that returns a FLAT LIST OF VALUES
+    (e.g. ['uninstalled']), not a list of dicts, which makes it impossible to tell
+    which value belongs to which module. search_read is explicit and unambiguous.
+
+    Names absent from the result have no ir_module_module row at all, which means
+    Odoo has never seen the module - normally because its files aren't in the
+    container's addons path (common-addons_v*).
+    """
+    rows = client.execute('ir.module.module', 'search_read',
+                          [('name', 'in', list(modules))], ['name', 'state'])
+    return {row['name']: row['state'] for row in rows}
+
+
+def _module_states_with_retry(client, modules, attempts=6, delay=5):
+    """
+    module_states(), retried - installing a module reloads the target's registry,
+    which routinely kills the in-flight XML-RPC call and can make the next one or
+    two fail too while Odoo comes back up. Returns None if it never succeeded.
+    """
+    for attempt in range(attempts):
         try:
-            client.install(each)
-            time.sleep(1)
+            return module_states(client, modules)
         except Exception as e:
-            modules_missed.append(each)
-            _logger.error("Module %s couldn't be installed. Erro:- %r"%(each,str(e)))
-        else:
-            _logger.info("Module %s installed"%each)
-    return (False if len(modules_missed) else True, modules_missed)
+            _logger.warning("Could not read module states (attempt %s/%s): %r",
+                            attempt + 1, attempts, e)
+            time.sleep(delay)
+    return None
 
 
-def create_saas_client(operation = None, odoo_url=None, odoo_username = None, odoo_password = None, base_db=None, database_name=None,modules_list=[],admin_passwd = "admin"):
+def install_modules(client, modules=None):
+    """
+    Install `modules` into the connected database and report honestly which ones
+    did NOT end up installed.
+
+    Returns (all_ok, modules_missed).
+
+    Two things this deliberately does differently from the original:
+
+    1. It calls `button_immediate_install` instead of erppeek's `client.install()`.
+       erppeek presses `button_install` - which only *flags* the module as
+       'to install' - and then relies on `base.module.upgrade.upgrade_module()` to
+       actually apply it. Both of those reload the target registry, which frequently
+       tears down the XML-RPC connection mid-call, so the caller sees a "connection
+       error" for an install that may well have succeeded. `button_immediate_install`
+       is the same entry point the Apps UI uses and needs no second step.
+
+    2. It decides success by RE-READING ir_module_module afterwards, not by the
+       absence of an exception. "No exception" never proved anything here: a module
+       whose files are missing from common-addons_v* has no ir_module_module row,
+       and a registry-reload disconnect looks like a failure even on success. The
+       database's own state is the only trustworthy answer.
+    """
+    modules = list(modules or [])
+    if not modules:
+        return (True, [])
+
+    # Re-scan the addons path first. A module whose files were only just copied into
+    # common-addons_v* has no ir_module_module row yet, and every install attempt
+    # against it would fail as "not found" until update_list() runs.
+    try:
+        client.model('ir.module.module').update_list()
+    except Exception as e:
+        _logger.warning("ir.module.module.update_list() failed, continuing anyway: %r", e)
+
+    known = {}
+    try:
+        known = module_states(client, modules)
+    except Exception as e:
+        _logger.warning("Could not pre-read module states: %r", e)
+
+    for name in modules:
+        if known and name not in known:
+            _logger.error("Module %s has no ir_module_module row in this database - its files "
+                          "are almost certainly missing from the container's addons path "
+                          "(common-addons_v*). Nothing in Odoo can install it from here.", name)
+
+    for name in modules:
+        if known.get(name) in INSTALLED_STATES:
+            _logger.info("Module %s already installed, skipping", name)
+            continue
+        try:
+            ids = client.execute('ir.module.module', 'search', [('name', '=', name)])
+            if not ids:
+                continue  # already logged above
+            client.execute('ir.module.module', 'button_immediate_install', ids)
+            _logger.info("Requested immediate install of module %s", name)
+        except Exception as e:
+            # Very likely the registry reload dropping the connection. Don't decide
+            # anything here - the verification pass below is authoritative.
+            _logger.warning("button_immediate_install(%s) raised %r - will verify actual state",
+                            name, e)
+        time.sleep(1)
+
+    final = _module_states_with_retry(client, modules)
+    if final is None:
+        # Genuinely couldn't verify. Report the modules as missed rather than
+        # claiming success - silently-wrong bookkeeping is what caused the original
+        # "everything says installed but nothing is" state.
+        _logger.error("Could not verify module install state for %r - reporting as missed", modules)
+        return (False, modules)
+
+    modules_missed = [m for m in modules if final.get(m) not in INSTALLED_STATES]
+    for m in modules:
+        _logger.info("Module %s final state: %r", m, final.get(m))
+    if modules_missed:
+        _logger.error("Modules NOT installed after install pass: %r", modules_missed)
+    return (not modules_missed, modules_missed)
+
+
+def verify_module_installed(client, module):
+    """Back-compat single-module helper. True/False, or None if unreadable."""
+    try:
+        return module_states(client, [module]).get(module) in INSTALLED_STATES
+    except Exception as e:
+        _logger.warning("Could not verify install state of module %s: %r", module, e)
+        return None
+
+
+def create_saas_client(operation = None, odoo_url=None, odoo_username = None, odoo_password = None, base_db=None, database_name=None,modules_list=[],admin_passwd = "admin", common_addons_path=None, entitled_modules=None):
 
     response = {'modules_installation' : False, "modules_missed" : modules_list}
     if operation not in ['clone','create','install']:
@@ -138,4 +252,9 @@ def create_saas_client(operation = None, odoo_url=None, odoo_username = None, od
            response['modules_installation'] = False
            return response
        response['modules_installation'],response['modules_missed'] = install_modules(client, modules_list)
+       # Tighten which OTHER custom modules this database can even see, now that the
+       # entitled ones (and whatever they pulled in as dependencies) are installed.
+       if common_addons_path:
+           response['visibility'] = module_visibility.enforce_module_visibility(
+               client, entitled_modules or modules_list, common_addons_path)
     return response

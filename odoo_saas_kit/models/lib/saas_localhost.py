@@ -14,6 +14,7 @@ from contextlib import closing
 from configparser import ConfigParser
 from . import saas_client_db
 from . import client_port_map
+from . import hostnames
 from .  pg_query import PgQuery
 from .. static_saas_kit import SAAS_ODOO_VERSIONS
 
@@ -486,19 +487,57 @@ def main(context=None):
 
     time.sleep(1)
 
-    result = {'modules_installation': True, 'modules_missed': []}
+    # The client DB is a clone of the plan's template, so it already contains whatever
+    # the template had installed. That is NOT the same as "the plan's modules are
+    # installed": the template can predate modules added to the plan later, and until
+    # recently template creation itself installed nothing at all. So install the plan's
+    # module list here too - install_modules() skips anything already present, so for a
+    # healthy template this is a cheap no-op that just proves the end state.
+    #
+    # This used to be `result = {'modules_installation': True, 'modules_missed': []}` -
+    # a hardcoded success. The `modules` argument was read at the top of this function
+    # and then never used, and saas_client.fetch_client_url() marked every module row
+    # 'installed' off the back of that constant.
+    if modules:
+        result = saas_client_db.create_saas_client(
+            operation="install",
+            odoo_url="{}:{}".format("http://localhost", port['port']),
+            odoo_username=OdooObject.container_user,
+            odoo_password=OdooObject.container_passwd,
+            database_name=db,
+            modules_list=modules,
+            admin_passwd=OdooObject.container_master,
+            # Only this plan's custom modules stay visible in the client's Apps.
+            common_addons_path=OdooObject.common_addons,
+            entitled_modules=modules,
+        )
+        if not result.get('modules_installation'):
+            _logger.error("Client %s created, but these plan modules are NOT installed: %r",
+                          db, result.get('modules_missed'))
+    else:
+        result = {'modules_installation': True, 'modules_missed': []}
+
     OdooObject.response['url'] = "{}:{}".format(str(host_domain), port['port'])
 
     _logger.info("-----------MAPPING DOMAIN--------")
 
-    NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable, ssh_host=OdooObject.nginx_ssh_host, ssh_port=OdooObject.nginx_ssh_port, ssh_user=OdooObject.nginx_ssh_user, ssh_key=OdooObject.nginx_ssh_key)
-    resp = NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(port['port'])),"localhost:{}".format(str(port['longport'])))
+    # Deliberately NO per-client nginx vhost file any more. Every *.hisabflow.tech
+    # client is served by the single wildcard-clients vhost (regex server_name +
+    # shared wildcard cert); all it needs is this one host->port line in
+    # client-ports.conf, and update_client_port_map() reloads nginx itself.
+    #
+    # Writing a per-client vhost was not merely redundant, it broke HTTPS: those
+    # generated files listen on :80 with an EXACT server_name, and nginx prefers an
+    # exact server_name match over a regex one - so they shadowed the wildcard
+    # vhost's ":80 -> 301 https" block. Every client was therefore reachable over
+    # plain HTTP with no redirect at all (verified against the live site: an http://
+    # request returned Odoo's own 303 directly instead of a redirect to https).
+    ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
+    resp = client_port_map.update_client_port_map(ssh_conf, host_domain, port['port'])
+    if not resp:
+        _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
 
     _logger.info("----------MAPPING RESULT--------%r", resp)
-
-    ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
-    if not client_port_map.update_client_port_map(ssh_conf, host_domain, port['port']):
-        _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
 
     # A freshly-created container is unreliable for its first ~30-90s (the XML-RPC
     # login attempts a few lines up routinely fail with "Invalid username or
@@ -539,7 +578,7 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
 
     response['odoo_image'] = OdooObject.odoo_image
     sitesEnable = OdooObject.odoo_config+"/docker_vhosts/"
-    host_domain = "db"+version.split(".")[0]+"_templates."+host_server['server_domain']
+    host_domain = hostnames.db_template_host(version, host_server['server_domain'])
     response['port'] = OdooObject.template_odoo_port
     response['lport'] = OdooObject.template_odoo_lport
     response['name'] = OdooObject.odoo_template
@@ -571,18 +610,31 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
             # See the matching comment in run_odoo() re: shared Postgres connection
             # exhaustion across many low-traffic containers.
             OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","db_maxconn = 4")
+            # This container hosts EVERY plan's template DB, so it can't be pinned to a
+            # single database the way a client container is - but it must still be
+            # confined to template databases. Without any dbfilter it happily connects
+            # to every database on the shared Postgres, including the manager's own:
+            # the live container was found running the manager's crons against it and
+            # failing them ("KeyError: 'saas.contract'", since odoo_saas_kit isn't on
+            # this container's addons path), and serving a login page for the manager
+            # database at db19-templates.<domain>/web/login?db=<manager_db>.
+            # create_db_template() prefixes every template DB with "template_", so
+            # that prefix is exactly the right boundary.
+            OdooObject.add_config_paramenter(OdooObject.odoo_config+"/"+OdooObject.odoo_template+"/odoo.conf","dbfilter = ^template_")
 
             OdooObject.dclient.containers.run(image = OdooObject.odoo_image, name = OdooObject.odoo_template, detach = True, volumes = {extra_path:{'bind':OdooObject.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'}, OdooObject.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}}, ports = {8069:OdooObject.template_odoo_port,8071:OdooObject.template_odoo_lport}, tty = True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%OdooObject.odoo_template)
             if not OdooObject.wait_for_http("http://localhost:%s"%OdooObject.template_odoo_port, timeout=120, interval=3):
                 raise Exception("Odoo container %s did not become ready in time"%OdooObject.odoo_template)
 
-            NginxVhost = nginx_vhost(sitesAvailable = sitesEnable, sitesEnable = sitesEnable, ssh_host=OdooObject.nginx_ssh_host, ssh_port=OdooObject.nginx_ssh_port, ssh_user=OdooObject.nginx_ssh_user, ssh_key=OdooObject.nginx_ssh_key)
-            if NginxVhost.domainmapping(str(host_domain),"localhost:{}".format(str(OdooObject.template_odoo_port)), "localhost:{}".format(str(OdooObject.template_odoo_lport))):
+            # Same as in main(): the wildcard-clients vhost + client-ports.conf map
+            # serve this host, so no per-host vhost file is written (one would shadow
+            # the wildcard vhost's http->https redirect - see main()).
+            ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
+            if client_port_map.update_client_port_map(ssh_conf, host_domain, OdooObject.template_odoo_port):
                 response['url'] = "https://{}".format(str.lower(host_domain))
-                ssh_conf = {"host": OdooObject.nginx_ssh_host, "port": OdooObject.nginx_ssh_port, "user": OdooObject.nginx_ssh_user, "key": OdooObject.nginx_ssh_key}
-                if not client_port_map.update_client_port_map(ssh_conf, host_domain, OdooObject.template_odoo_port):
-                    _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
+            else:
+                _logger.error("Could not add %s to the HTTPS client-ports map; it will not be reachable over the wildcard-clients vhost", host_domain)
         except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError, Exception) as e:
             _logger.error("Odoo container with name %s couldn't be started. Error: %s"%(OdooObject.odoo_template,e))
 
@@ -596,34 +648,49 @@ def create_db_template(db_template=None,modules=None, config_path=None,host_serv
 
     _logger.info("NNNNAAAA %s"%OdooObject.odoo_template)
     response['container_id'] = response['name']
-    if OdooObject.check_if_db_exists("http://localhost:%s"%OdooObject.template_odoo_port, db_template):
-        _logger.info("ALREADY EXISTS %s"%db_template)
-        response['result'] = "alreadyexists"
-        response['status'] = True
-    elif OdooObject.create_db("http://localhost:%s"%OdooObject.template_odoo_port, db_template,OdooObject.template_master): #Creating a default DB.
-        _logger.info("DEOSNt ALREADY EXIST %s"%db_template)
-        _logger.info("Odoo container with name is available %s at http://localhost:%s"%(OdooObject.odoo_template,OdooObject.template_odoo_port))
+    template_url = "http://localhost:%s"%OdooObject.template_odoo_port
 
-        result = saas_client_db.create_saas_client(operation = "install", odoo_url="http://{}:{}".format("localhost", OdooObject.template_odoo_port),odoo_username = OdooObject.container_user ,odoo_password = OdooObject.container_passwd, database_name = db_template,modules_list = modules,admin_passwd = OdooObject.template_master)
+    # The template DB either already exists (re-running "Create DB Template", or a
+    # previous attempt that got as far as creating the DB) or has to be created. Either
+    # way the plan's module list still has to be installed into it.
+    #
+    # This used to short-circuit on the "already exists" branch with
+    # `response['result'] = "alreadyexists"` and install NOTHING, while still reporting
+    # status=True. saas_plan.create_db_template() then saw a non-dict result, defaulted
+    # modules_missed to [], and marked every module 'installed'. Net effect: a template
+    # DB with none of its plan's modules in it and bookkeeping that swore otherwise -
+    # which is exactly the state both live plan templates were found in.
+    if OdooObject.check_if_db_exists(template_url, db_template):
+        _logger.info("Template DB %s already exists - reusing it and (re)installing the module list"%db_template)
+        db_available = True
+    elif OdooObject.create_db(template_url, db_template, OdooObject.template_master): #Creating a default DB.
+        _logger.info("Created template DB %s on container %s at %s"%(db_template, OdooObject.odoo_template, template_url))
+        db_available = True
+    else:
+        db_available = False
+        response.update({'status': False,'msg': "Couldn't Create DB. Please ensure that template server is running, you may need to restart it once!!",})
+
+    if db_available:
+        # install_modules() skips anything already installed, so this is safe to
+        # re-run against an existing template DB.
+        result = saas_client_db.create_saas_client(operation = "install", odoo_url="http://{}:{}".format("localhost", OdooObject.template_odoo_port),odoo_username = OdooObject.container_user ,odoo_password = OdooObject.container_passwd, database_name = db_template,modules_list = modules,admin_passwd = OdooObject.template_master,
+            # Only this plan's custom modules stay visible in the template's Apps.
+            common_addons_path = OdooObject.common_addons, entitled_modules = modules)
 
         response['result'] = result
         response['status'] = True
 
-        # Same "restart once after setup" fix already applied to per-client containers
-        # in run_odoo() - a freshly created database's auto-login token can be
-        # spuriously rejected by this long-running shared container until it's
-        # restarted once (confirmed by replaying the exact same valid, non-expired
-        # token immediately after a restart - it then succeeds; root cause not fully
-        # chased into Odoo internals, see SAAS_KIT_NOTES.md). This restart briefly
-        # affects every other plan's template sharing this container, but only runs
-        # on the relatively rare "Create DB Template" action, not on every login.
+        # A module is installed over XML-RPC, which updates the database but not the
+        # already-running server process: its registry, loaded Python and compiled
+        # asset bundles still predate the install. Restarting the container is what
+        # makes a freshly installed module actually usable. This briefly affects every
+        # other plan's template sharing this container, but only runs on the relatively
+        # rare "Create DB Template" action.
         try:
             OdooObject.dclient.containers.get(OdooObject.odoo_template).restart()
             OdooObject.wait_for_http("http://localhost:%s"%OdooObject.template_odoo_port, timeout=60, interval=3)
         except Exception as e:
             _logger.error("Could not restart %s after template creation: %r", OdooObject.odoo_template, e)
-    else:
-        response.update({'status': False,'msg': "Couldn't Create DB. Please ensure that template server is running, you may need to restart it once!!",})
 
     #OdooObject.write_saas_data(OdooObject.odoo_template, response)
     return response

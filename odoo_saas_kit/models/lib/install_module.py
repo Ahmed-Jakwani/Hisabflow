@@ -9,18 +9,11 @@ except ImportError as e:
     _logger.error("erppeek library not installed!!")
     
     
-def install_modules(client, modules = []):
-    modules_missed = []
-    for each in modules:
-        try:
-            client.install(each)
-            time.sleep(1)
-        except Exception as e:
-            modules_missed.append(each)
-            _logger.error("Module %s couldn't be installed. Erro:- %r"%(each,str(e)))
-        else:
-            _logger.info("Module %s installed"%each)
-    return (False if len(modules_missed) else True, modules_missed)
+# This module used to carry its own byte-identical copy of install_modules(),
+# which meant a fix applied to one path (create_db_template) silently missed the
+# other (install_remaining_modules / the per-client Install button). Reuse the
+# single verified implementation instead of maintaining two.
+from .saas_client_db import install_modules, verify_module_installed  # noqa: F401
 
 def connect_db(url , database , user_name , passwd , flag = True):
     count = 0
