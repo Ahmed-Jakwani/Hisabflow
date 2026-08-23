@@ -896,3 +896,100 @@ exist in `common_addons_v19` on the host - nothing in Odoo puts them there.
     and now demonstrably harmful, since the server's copy has diverged and can't
     be reconciled by git without clobbering live credentials. Recommended:
     untrack both, ship `.example` templates, inject real values on the server.
+
+  ### Deployment + verification of the above (same session, after the push)
+
+  Server clone reconciled cleanly: the three hand-edited `.py` files were reverted
+  (superseded by the committed fix), and `saas.conf` turned out to be
+  **byte-identical to `origin/main`'s version** - the hand-edit had simply been
+  `ce99f72`'s saas.conf change applied ahead of the pull, so there was no
+  credential divergence after all. `git pull --ff-only` to `2a91318`, hash
+  re-verified afterwards. `saas_kit_auto_login` was then copied from the clone into
+  `common-addons_v19` (that directory is NOT a git clone - copying is the
+  deployment mechanism) with `chmod -R a+rX`, and `odoo_saas_kit` was upgraded via
+  `odoo shell` → `button_immediate_upgrade()` to apply the `ondelete='cascade'`
+  schema change (verified in `information_schema`: both FKs now CASCADE).
+
+  **Auto-login fix verified the only way that counts**: the same
+  `prove_hash_mutation.py` experiment that previously went WORKS → *one
+  db-manager call* → FAILS now goes WORKS → *same call* → **WORKS**. Re-run across
+  all three templates and all three clients: durable everywhere.
+
+  ### Two further bugs found only by actually running the flows
+
+  - **Rotating `container_passwd` silently severs management access to every
+    already-provisioned database.** Changing it in saas.conf does not re-key
+    existing DBs - their `res_users` row still holds the hash of the password that
+    was current at creation. `ce99f72` rotated it, and as a result one plan
+    template and **both live clients** had been unreachable to every management RPC
+    ever since: the per-client Install button, `install_remaining_modules()` and
+    the Add Module wizard would all have failed on them with nothing but
+    "Connection Failure". Confirmed by authenticating each database against both
+    the old and new values.
+    - Compounding it, `reconcile_modules()` initially took the *login* from
+      `container_user` too - but `set_user_data()` renames user id 2 to the
+      customer's own email on every real client (the live ones authenticate as
+      `demo@gmail.com` and `mussyyabali@hisabflow.tech`), so `container_user` is
+      never a valid login on a client. `query.get_credentials()` already existed to
+      read the real login; the per-client Install button was already using it.
+    - Fixed with `saas_client_db.candidate_passwords()` /
+      `connect_admin()`: login read from the target DB, password tried against
+      `container_passwd` plus an optional comma-separated
+      `container_passwd_legacy`. A rotation is now something the operator records
+      instead of something that quietly breaks everything older than it. The
+      previous password has been recorded in the live `saas.conf`.
+
+  - **`update_list()` over XML-RPC was broken, which made module hiding
+    irreversible.** erppeek's `Model.update_list()` sends the call with no
+    positional arguments, but Odoo's XML-RPC entry point begins
+    `ids, args = args[0], args[1:]` (`odoo/service/model.py`, `call_kw`), so it
+    dies with `IndexError: list index out of range` before `update_list()` runs.
+    Passing an explicit empty ids list works; databases have been seen to disagree
+    on which form they accept, so `update_module_list()` tries both.
+    - This mattered much more than it looks: entitlement enforcement *removes* the
+      `ir_module_module` row of a non-entitled module, so granting that module
+      later depends entirely on `update_list()` re-creating the row. With
+      `update_list` broken, a module could be hidden but never un-hidden. It is
+      also what makes a module whose files were just copied into
+      `common-addons_v*` installable at all.
+    - Worth recording: the honest-bookkeeping change did its job here.
+      `install_modules()` reported the module as missed and
+      `install_remaining_modules()` raised, instead of recording a successful
+      install of a module that was never installed - which is exactly how this
+      class of bug used to pass unnoticed.
+
+  ### End-to-end validation (real product code paths, not hand-rolled equivalents)
+
+  Created `AUDIT E2E Product` → `AUDIT E2E Plan` (id 17, modules
+  `point_of_sale` + `app_odoo_customize`, deliberately different from both live
+  plans so entitlement results are unambiguous) → `create_db_template()` →
+  `saas.contract` 29 → `create_saas_client()` → `saas.client` 25
+  (`audite2e.hisabflow.tech`, port 8005). Verified independently at each step:
+
+  - Template `template_audit_e2e_plan_tid_17`: all 3 entitled modules installed
+    (incl. `saas_kit_auto_login`), all 5 probed non-entitled custom modules have
+    **no `ir_module_module` row at all**, 61 modules installed in total (stock CE +
+    dependencies).
+  - Client: container up, DB cloned, entitled modules installed, non-entitled
+    absent, `client_url` is `https://`.
+  - **No per-client vhost file was written** (`docker_vhosts/` contains only the
+    two templates), and the `client-ports.conf` map gained
+    `audite2e.hisabflow.tech 8005` - i.e. the SSL fix holds in the provisioning
+    path, not just for the two vhosts deleted by hand.
+  - `http://audite2e.hisabflow.tech` → **301** → `https://`, cert validated.
+  - Auto-login durable on both the new template and the new client.
+  - Add Module wizard on the live plan: plan updated, **contract snapshot synced**
+    (the propagation gap that previously existed), module installed into template
+    and client - including re-granting `om_account_accountant`, which had
+    previously been *hidden* in those DBs, proving hiding is reversible.
+
+  Final state: 3 plans / 3 templates / 3 clients, 26 `saas.module.status` rows all
+  matching what the databases actually report, **0 orphans**, and auto-login
+  durable on all six targets.
+
+  **Test artefacts left in place** (harmless, easy to remove if unwanted): product
+  `AUDIT E2E Product`, plan 17, contract 29, client 25, container
+  `audite2e.hisabflow.tech`, DB `audite2e.hisabflow.tech`, partner
+  `audit-e2e@hisabflow.tech`, and its `client-ports.conf` line. A couple of
+  duplicate `AUDIT E2E Product` rows may exist from the two failed first attempts
+  (missing required `recurring_interval` / `saas_base_url` on `saas.plan`).
