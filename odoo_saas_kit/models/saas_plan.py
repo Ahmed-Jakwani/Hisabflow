@@ -15,6 +15,8 @@ from . lib import query
 from . lib import saas
 from . lib import auto_login_token
 from . lib import hostnames
+from . lib import saas_client_db
+from . lib import module_visibility
 import logging
 import time
 import os
@@ -622,6 +624,128 @@ class SaasPlans(models.Model):
                     self.is_all_installed = False
                 self.env['saas.module.status'].browse(module_status_unlink_list).unlink()
         return res
+
+    def _reconcile_one_db(self, odoo_url, db_name, entitled, common_addons_path):
+        """
+        Bring ONE database in line with `entitled`: install what's missing, hide the
+        custom modules it isn't entitled to, and report what is actually installed.
+
+        Returns a dict, or None if the database couldn't be reached at all.
+        """
+        config_path = get_module_resource('odoo_saas_kit')
+        login = auto_login_token.read_secret(config_path, "container_user")
+        password = auto_login_token.read_secret(config_path, "container_passwd")
+
+        rpc = saas_client_db.connect_db(odoo_url, db_name, login, password, flag=False)
+        if not rpc:
+            _logger.error("Could not connect to %s at %s to reconcile modules", db_name, odoo_url)
+            return None
+
+        installed_ok, missed = saas_client_db.install_modules(rpc, entitled)
+        visibility = module_visibility.enforce_module_visibility(rpc, entitled, common_addons_path)
+        states = {}
+        try:
+            states = saas_client_db.module_states(rpc, entitled)
+        except Exception as e:
+            _logger.warning("Could not re-read module states for %s: %r", db_name, e)
+
+        return {
+            'db': db_name,
+            'installed_ok': installed_ok,
+            'missed': missed,
+            'states': states,
+            'visibility': visibility,
+        }
+
+    def reconcile_modules(self):
+        """
+        Maintenance action: make this plan's DB template and every one of its running
+        clients match the plan's module list, and re-assert module entitlement on all
+        of them.
+
+        This exists because provisioning-time enforcement only helps things created
+        *after* the fix. Templates and clients built earlier can be arbitrarily out of
+        step - notably, both live templates were found with none of their plan's
+        modules installed while every saas.module.status row claimed 'installed',
+        because create_db_template()'s "already exists" path installed nothing and
+        reported success anyway.
+
+        For each target it: installs any entitled module that isn't installed, removes
+        the non-entitled custom modules from its Apps, and then rewrites the
+        saas.module.status bookkeeping from what the database ACTUALLY reports - so the
+        bookkeeping stops being able to lie in the same direction twice.
+        """
+        self.ensure_one()
+        config_path = get_module_resource('odoo_saas_kit')
+        common_addons_path = auto_login_token.read_secret(
+            config_path, "common_addons_v%s" % SAAS_ODOO_VERSION.split('.', 1)[0])
+
+        # saas_kit_auto_login is structurally required (it serves the Login button's
+        # route), so it is always entitled regardless of the plan's module list.
+        entitled = [m.technical_name for m in self.saas_module_ids if m.technical_name]
+        if 'saas_kit_auto_login' not in entitled:
+            entitled.append('saas_kit_auto_login')
+
+        results = []
+
+        if self.db_template:
+            template_port = install_module.get_port(
+                config_path + "/models/lib/saas.conf", SAAS_ODOO_VERSION.split('.', 1)[0])
+            res = self._reconcile_one_db(
+                "http://localhost:%s" % template_port, self.db_template,
+                entitled, common_addons_path)
+            if res:
+                res['kind'] = 'template'
+                results.append(res)
+                self._write_status_from_states(res['states'], plan_scope=True)
+                try:
+                    self.restart_db_template()
+                except Exception as e:
+                    _logger.error("Reconciled template %s but could not restart its "
+                                  "container: %r", self.db_template, e)
+
+        clients = self.env['saas.client'].search([
+            ('saas_contract_id.plan_id', '=', self.id),
+            ('state', '=', 'started'),
+        ])
+        for client in clients:
+            res = self._reconcile_one_db(
+                "http://localhost:%s" % client.containter_port, client.database_name,
+                entitled, common_addons_path)
+            if not res:
+                continue
+            res['kind'] = 'client'
+            results.append(res)
+            self._write_status_from_states(res['states'], client_id=client.id)
+            try:
+                client.restart_client()
+            except Exception as e:
+                _logger.error("Reconciled client %s but could not restart its "
+                              "container: %r", client.database_name, e)
+
+        body = ["<b>Module reconciliation</b>"]
+        for r in results:
+            hidden = r['visibility'].get('hidden') or r['visibility'].get('flagged') or []
+            body.append(
+                "%s <b>%s</b>: installed=%s, missed=%s, hidden from Apps=%s"
+                % (r['kind'], r['db'],
+                   sorted(k for k, v in r['states'].items() if v in ('installed', 'to upgrade')),
+                   r['missed'] or 'none', len(hidden)))
+        if not results:
+            body.append("Nothing could be reached - see the server log.")
+        self.message_post(body="<br/>".join(body))
+
+    def _write_status_from_states(self, states, client_id=None, plan_scope=False):
+        """
+        Rewrite saas.module.status rows from what the target database actually
+        reports, instead of from an assumption that the install worked.
+        """
+        domain = [('plan_id', '=', self.id)] if plan_scope else [('client_id', '=', client_id)]
+        for row in self.env['saas.module.status'].search(domain):
+            actual = states.get(row.technical_name)
+            if actual is None:
+                continue
+            row.status = 'installed' if actual in ('installed', 'to upgrade') else 'uninstalled'
 
     def sync_contract_modules(self):
         """

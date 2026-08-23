@@ -65,6 +65,8 @@
 
                         <button type="action" name="%(odoo_saas_kit.action_wizard_add_module_to_plan)d" string="Add Module" icon="fa-plus" invisible="state != 'confirm'" help="Add a new module to this already-confirmed plan and push it to its running clients"/>
 
+                        <button string="Reconcile Modules" name="reconcile_modules" type="object" icon="fa-refresh" invisible="state != 'confirm'" help="Install any missing plan module into this plan's DB template and its running clients, hide the custom modules they are not entitled to, and rewrite the module status bookkeeping from what those databases actually report"/>
+
                         <field name="state" widget="statusbar"/>
                         <field name="db_dropped" invisible="1"/>
                     </header>
