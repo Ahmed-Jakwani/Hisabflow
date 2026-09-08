@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_db_backup" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.db.backup</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Database Backup" string="Database Backup"
+                     name="db_backup_cloud" groups="base.group_system">
+
+                    <block title="General" name="dbk_general_block">
+                        <setting string="Run now"
+                                 help="Back up every configured database immediately.">
+                            <button name="action_db_backup_now" type="object"
+                                    string="Backup All Now" class="btn-primary"/>
+                        </setting>
+                        <setting title="Let the daily cron run the due backups."
+                                 help="Each database's own frequency is set on its record under Backups ▸ Databases.">
+                            <field name="dbk_schedule_enabled"/>
+                        </setting>
+                    </block>
+
+                    <block title="Storage" name="dbk_storage_block">
+                        <setting help="One sub-folder is created per database under this root.">
+                            <div class="content-group">
+                                <div class="mt16 row">
+                                    <label for="dbk_backup_root" class="col-lg-4 o_light_label"/>
+                                    <field name="dbk_backup_root" placeholder="/opt/odoo19/Backups"/>
+                                </div>
+                                <div class="row">
+                                    <label for="dbk_default_keep" class="col-lg-4 o_light_label"/>
+                                    <field name="dbk_default_keep"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
+                    <block title="SaaS Kit Layout" name="dbk_saas_block">
+                        <setting help="Where client and template filestores live. A client's
+                                       attachments are NOT in this instance's data_dir, so these
+                                       paths are what makes a client backup complete.">
+                            <div class="content-group">
+                                <div class="mt16 row">
+                                    <label for="dbk_saas_data_root" class="col-lg-4 o_light_label"/>
+                                    <field name="dbk_saas_data_root" placeholder="/opt/odoo19/Odoo-SAAS-Data"/>
+                                </div>
+                                <div class="row">
+                                    <label for="dbk_template_container" class="col-lg-4 o_light_label"/>
+                                    <field name="dbk_template_container" placeholder="odoo19_template_cont"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

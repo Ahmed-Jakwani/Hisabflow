@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══ Databases to back up ═══ -->
+    <record id="view_db_backup_target_list" model="ir.ui.view">
+        <field name="name">db.backup.target.list</field>
+        <field name="model">db.backup.target</field>
+        <field name="arch" type="xml">
+            <list string="Databases" multi_edit="1">
+                <header>
+                    <button name="action_backup_all" type="object" display="always"
+                            string="Backup All Now" class="btn-primary"/>
+                </header>
+                <field name="db_name"/>
+                <field name="folder_name"/>
+                <field name="backup_format"/>
+                <field name="frequency"/>
+                <field name="keep_last"/>
+                <field name="last_backup_date"/>
+                <field name="last_state" widget="badge"
+                       decoration-success="last_state == 'success'"
+                       decoration-warning="last_state == 'partial'"
+                       decoration-danger="last_state == 'failed'"/>
+                <button name="action_backup_now" type="object" string="Backup Now"
+                        icon="fa-download" title="Back up this database now"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_db_backup_target_form" model="ir.ui.view">
+        <field name="name">db.backup.target.form</field>
+        <field name="model">db.backup.target</field>
+        <field name="arch" type="xml">
+            <form string="Backup Target">
+                <header>
+                    <button name="action_backup_now" type="object" string="Backup Now"
+                            class="btn-primary" invisible="not id"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_backups" type="object"
+                                class="oe_stat_button" icon="fa-archive" invisible="not id">
+                            <field name="backup_count" widget="statinfo" string="Backups"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="db_name"/>
+                        <h1><field name="db_name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Storage">
+                            <field name="folder_name"/>
+                            <field name="folder_path"/>
+                            <field name="keep_last"/>
+                        </group>
+                        <group string="Schedule">
+                            <field name="backup_format"/>
+                            <field name="frequency"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <group string="Last Run" invisible="not last_backup_date">
+                        <field name="last_backup_date"/>
+                        <field name="last_state" widget="badge"/>
+                        <field name="last_error" invisible="not last_error"/>
+                    </group>
+                    <notebook invisible="not id">
+                        <page string="Backups" name="backups">
+                            <field name="backup_ids" readonly="1">
+                                <list>
+                                    <field name="backup_date"/>
+                                    <field name="name"/>
+                                    <field name="file_size" string="Size (MB)"/>
+                                    <field name="scheduled"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'success'"
+                                           decoration-warning="state == 'partial'"
+                                           decoration-danger="state == 'failed'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_db_backup_target_search" model="ir.ui.view">
+        <field name="name">db.backup.target.search</field>
+        <field name="model">db.backup.target</field>
+        <field name="arch" type="xml">
+            <search string="Backup Targets">
+                <field name="db_name"/>
+                <filter name="filter_failed" string="Failed" domain="[('last_state', '=', 'failed')]"/>
+                <filter name="filter_partial" string="No Filestore" domain="[('last_state', '=', 'partial')]"/>
+                <filter name="filter_never" string="Never Run" domain="[('last_backup_date', '=', False)]"/>
+                <separator/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_frequency" string="Frequency" context="{'group_by': 'frequency'}"/>
+                    <filter name="group_state" string="Last Result" context="{'group_by': 'last_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_db_backup_target" model="ir.actions.act_window">
+        <field name="name">Databases</field>
+        <field name="res_model">db.backup.target</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a database to back up</p>
+            <p>Pick a database from the dropdown — your own, a client's, or a plan
+               template. Each one gets its own folder under the backup root.</p>
+        </field>
+    </record>
+</odoo>

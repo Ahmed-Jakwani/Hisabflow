@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══ Backup history list ═══ -->
+    <record id="view_db_backup_list" model="ir.ui.view">
+        <field name="name">db.backup.list</field>
+        <field name="model">db.backup</field>
+        <field name="arch" type="xml">
+            <list string="Backups" create="false">
+                <header>
+                    <button name="action_backup_all" type="object" string="Backup All Now"
+                            display="always" class="btn-primary"/>
+                </header>
+                <field name="backup_date"/>
+                <field name="name"/>
+                <field name="db_name"/>
+                <field name="file_size" string="Size (MB)"/>
+                <field name="scheduled"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'success'"
+                       decoration-warning="state == 'partial'"
+                       decoration-danger="state == 'failed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ═══ Backup detail form ═══ -->
+    <record id="view_db_backup_form" model="ir.ui.view">
+        <field name="name">db.backup.form</field>
+        <field name="model">db.backup</field>
+        <field name="arch" type="xml">
+            <form string="Backup" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="backup_date"/>
+                            <field name="db_name"/>
+                            <field name="target_id"/>
+                        </group>
+                        <group>
+                            <field name="state" widget="badge"/>
+                            <field name="file_size" string="Size (MB)"/>
+                            <field name="scheduled"/>
+                        </group>
+                    </group>
+                    <group string="Stored At">
+                        <field name="file_path" nolabel="1"/>
+                    </group>
+                    <group string="Details" invisible="not error_message">
+                        <field name="error_message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_db_backup_search" model="ir.ui.view">
+        <field name="name">db.backup.search</field>
+        <field name="model">db.backup</field>
+        <field name="arch" type="xml">
+            <search string="Backups">
+                <field name="db_name"/>
+                <field name="name"/>
+                <filter name="filter_failed" string="Failed" domain="[('state', '=', 'failed')]"/>
+                <filter name="filter_partial" string="No Filestore" domain="[('state', '=', 'partial')]"/>
+                <separator/>
+                <filter name="filter_scheduled" string="Scheduled" domain="[('scheduled', '=', True)]"/>
+                <filter name="filter_manual" string="Manual" domain="[('scheduled', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_db" string="Database" context="{'group_by': 'db_name'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'backup_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══ Actions ═══ -->
+    <record id="action_db_backup" model="ir.actions.act_window">
+        <field name="name">Backup History</field>
+        <field name="res_model">db.backup</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No backups yet</p>
+            <p>Add the databases you want backed up under <b>Databases</b>, then click
+               <b>Backup All Now</b> or enable the schedule in <b>Settings</b>.</p>
+        </field>
+    </record>
+
+    <record id="action_db_backup_config" model="ir.actions.act_window">
+        <field name="name">Backup Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'db_backup_cloud'}</field>
+    </record>
+
+    <!-- ═══ Menus ═══ -->
+    <menuitem id="menu_db_backup_root" name="Backups" sequence="95"
+              web_icon="db_backup_cloud,static/description/icon.png"
+              groups="base.group_system"/>
+    <menuitem id="menu_db_backup_target" name="Databases"
+              parent="menu_db_backup_root" action="action_db_backup_target" sequence="10"
+              groups="base.group_system"/>
+    <menuitem id="menu_db_backup_history" name="Backup History"
+              parent="menu_db_backup_root" action="action_db_backup" sequence="20"
+              groups="base.group_system"/>
+    <menuitem id="menu_db_backup_settings" name="Settings"
+              parent="menu_db_backup_root" action="action_db_backup_config" sequence="30"
+              groups="base.group_system"/>
+</odoo>
