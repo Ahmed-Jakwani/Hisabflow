@@ -267,7 +267,18 @@ class odoo_container:
             # client containers - left unset, this is how the shared server ran out of
             # connections ("FATAL: sorry, too many clients already") with barely a
             # handful of clients running.
-            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_maxconn = 4")
+            #
+            # 16, not 4. These containers run threaded (workers unset => 0), so every
+            # concurrent request, both cron threads, and each open /websocket
+            # connection hold a cursor for their lifetime. At 4 the pool was exhausted
+            # by a single user with Discuss open - Odoo then answers *every* request,
+            # including /web/bundle/<name>, with an HTML error page, which surfaces in
+            # the browser as "AssetsLoadingError ... Unexpected token '<'" and stops
+            # Point of Sale from opening. The template container was already raised to
+            # 16 for the same reason; this keeps clients consistent with it.
+            # Budget check: max_clients=10 x 16 = 160, plus template and manager, well
+            # inside the shared server's max_connections=300.
+            self.add_config_paramenter(self.odoo_config+"/"+name+"/odoo.conf","db_maxconn = 16")
             extra_path = self.mkdir_mnt_extra_addons(name)
             self.dclient.containers.run(image=self.odoo_image,name=name,detach=True,volumes={extra_path:{'bind':self.data_dir,"mode":"rw"}, path: {'bind': "/etc/odoo/", 'mode': 'rw'},self.common_addons:{'bind': "/mnt/extra-addons", 'mode': 'rw'}},ports={8069:port, 8071:lport},tty=True,restart_policy={"Name":"unless-stopped"},extra_hosts={"host.docker.internal":"host-gateway"}) #Start the container
             _logger.info("Waiting for Odoo container %s to become ready"%name)
