@@ -1,0 +1,36 @@
+HisabFlow Basic B2B Theme - v19.0.1.3.1
+=========================================
+
+1. Homepage Search Separation
+-----------------------------
+- The custom "Search anything" control is rendered only while the HisabFlow
+  homepage application is active.
+- Sales, Purchases, Inventory, Accounting, Apps and all other Odoo screens use
+  only their own native control-panel search, so duplicate search bars are gone.
+- Ctrl+K remains the homepage search interaction.
+
+2. Company Switching
+--------------------
+- The native Odoo company selector remains visible and clickable.
+- Dashboard figures continue to use env.company and therefore refresh for the
+  company selected through Odoo's standard company switcher.
+- Dashboard record drill-down domains are generated for the active company.
+
+3. Quick Actions
+----------------
+- Sales, Purchases, Inventory, Accounting, Manufacturing and Point of Sale no
+  longer try to open root app menus that may not contain an action.
+- Every Overview Quick Action now opens an explicit ir.actions.act_window with
+  the correct model, current-company domain and selected date period.
+- KPI cards and Business Snapshot rows open their own filtered records.
+- Recent Business Activity rows open the selected record, while View All opens
+  the relevant invoices/vendor-bills list for the chosen date range.
+- Client-side navigation includes access-error handling and a visible Odoo
+  notification instead of an unhandled UI error.
+
+4. Layout
+---------
+- The HisabFlow left sidebar is retained on desktop.
+- The sidebar remains collapsible and remembers its state.
+- On smaller screens, the custom sidebar is hidden and Odoo's native app menu
+  receives the full viewport.

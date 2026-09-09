@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="web.NavBar" t-inherit-mode="extension">
+        <!--
+            Dashboard desktop topbar:
+              native Odoo "Overview" section  +  HisabFlow global search
+
+            We deliberately do NOT render a second custom "Overview" label.
+            Odoo's own section is the single source of that text, which avoids
+            duplicate/overlapping labels after upgrades or asset caching.
+        -->
+        <xpath expr="//div[hasclass('o_menu_systray')]" position="before">
+            <button t-if="isHFHomeApp()"
+                    type="button"
+                    class="hf-global-search hf-dashboard-global-search"
+                    aria-label="Search anything"
+                    title="Open global search (Ctrl + K)"
+                    t-on-click="openHFGlobalSearch">
+                <i class="fa fa-search hf-global-search-icon"/>
+                <span class="hf-global-search-placeholder">Search anything...</span>
+                <span class="hf-global-search-shortcut">
+                    <kbd>Ctrl</kbd><span>+</span><kbd>K</kbd>
+                </span>
+            </button>
+        </xpath>
+
+        <xpath expr="//header[hasclass('o_navbar')]" position="inside">
+            <aside class="hf-sidebar" aria-label="HisabFlow applications">
+                <div class="hf-sidebar-brand">
+                    <a href="/app" class="hf-sidebar-brand-link" aria-label="HisabFlow home"
+                       t-on-click.prevent="openHFHome">
+                        <img src="/hf_basic_b2b_theme/static/src/img/hisabflow-logo-white.svg"
+                             alt="HisabFlow" class="hf-sidebar-logo-full"/>
+                    </a>
+                </div>
+
+                <div class="hf-sidebar-scroll">
+                    <t t-set="hfApps" t-value="menuService.getApps()"/>
+                    <nav class="hf-sidebar-nav" aria-label="Application navigation">
+                        <t t-foreach="hfApps" t-as="app" t-key="app.id">
+                            <a t-att-href="getHFMenuHref(app)"
+                               t-att-data-menu-xmlid="app.xmlid"
+                               t-att-class="{'hf-sidebar-app': true, 'is-active': currentApp &amp;&amp; currentApp.id === app.id}"
+                               t-att-title="app.name"
+                               t-on-click.prevent="() => this.onHFSidebarMenuSelect(app)">
+                                <span class="hf-sidebar-app-icon" aria-hidden="true">
+                                    <i t-att-class="'fa ' + this.getHFAppFallbackIcon(app)"/>
+                                </span>
+                                <span class="hf-sidebar-app-name" t-esc="app.name"/>
+                            </a>
+                        </t>
+                    </nav>
+                </div>
+
+                <div class="hf-sidebar-footer">
+                    <div class="hf-sidebar-plan-icon">B2B</div>
+                    <div class="hf-sidebar-plan-copy">
+                        <strong>Basic B2B Plan</strong>
+                        <span>HisabFlow.tech</span>
+                    </div>
+                    <a href="/web/session/logout" class="hf-sidebar-logout" title="Sign out">
+                        <i class="fa fa-sign-out"/>
+                    </a>
+                </div>
+            </aside>
+        </xpath>
+    </t>
+</templates>

@@ -1,0 +1,10 @@
+HisabFlow Basic B2B Theme 19.0.1.5.13
+=====================================
+
+Dashboard topbar refinement:
+- Removed the custom three-line/hamburger button from the HisabFlow dashboard.
+- Added a clean "Overview" label at the start of the dashboard topbar.
+- Moved the global search field slightly to the right after the Overview label.
+- Kept only native Odoo systray controls on the right.
+- Other apps continue to use their native Odoo top submenu/header behavior.
+- Sidebar remains 215px and KPI amount sizing remains clamp(13px, 1.05vw, 17px).

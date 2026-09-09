@@ -1,0 +1,558 @@
+/* Global Odoo brand-color override ---------------------------------------
+ * Scope is intentionally limited to native backend headers and buttons.
+ * No height, width, margin, padding, position, overflow or scrolling rules
+ * are changed here.
+ */
+
+:root {
+    --hf-odoo-teal: #008080;
+    --hf-odoo-teal-hover: #006f6f;
+    --hf-odoo-teal-active: #005f5f;
+    --hf-odoo-teal-soft: rgba(0, 128, 128, 0.12);
+
+    /* Bootstrap/Odoo primary variables used by standard backend controls. */
+    --primary: var(--hf-odoo-teal);
+    --bs-primary: var(--hf-odoo-teal);
+    --bs-primary-rgb: 0, 128, 128;
+    --o-brand-primary: var(--hf-odoo-teal);
+    --o-brand-odoo: var(--hf-odoo-teal);
+}
+
+/* Native Odoo top header/navbar. */
+.o_web_client > header.o_navbar,
+.o_web_client > header.o_navbar .o_main_navbar,
+.o_main_navbar {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+}
+
+/* Header items keep readable white foregrounds. */
+.o_main_navbar .o_menu_brand,
+.o_main_navbar .o_nav_entry,
+.o_main_navbar .o_menu_sections .dropdown-toggle,
+.o_main_navbar .o_menu_systray .dropdown-toggle,
+.o_main_navbar .o_menu_systray > * > a,
+.o_main_navbar .o_menu_systray button,
+.o_main_navbar .o_switch_company_menu > button {
+    color: #ffffff !important;
+}
+
+.o_main_navbar .o_nav_entry:hover,
+.o_main_navbar .o_nav_entry:focus,
+.o_main_navbar .o_menu_sections .dropdown-toggle:hover,
+.o_main_navbar .o_menu_sections .dropdown-toggle:focus,
+.o_main_navbar .o_menu_systray .dropdown-toggle:hover,
+.o_main_navbar .o_menu_systray .dropdown-toggle:focus,
+.o_main_navbar .o_menu_systray button:hover,
+.o_main_navbar .o_menu_systray button:focus {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+}
+
+/* Standard primary/action buttons across form, list, kanban, wizard,
+ * dialog, control panel and settings views. */
+.o_web_client .btn-primary,
+.o_web_client button.btn-primary,
+.o_web_client a.btn-primary,
+.o_web_client .o_form_button_save,
+.o_web_client .o_list_button_add,
+.o_web_client .o-kanban-button-new,
+.o_web_client .o-kanban-button-new.btn,
+.o_web_client .o_form_statusbar .btn-primary,
+.o_web_client .modal-footer .btn-primary,
+.o_web_client .o_cp_buttons .btn-primary {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .btn-primary:hover,
+.o_web_client .btn-primary:focus,
+.o_web_client .btn-primary.focus,
+.o_web_client .o_form_button_save:hover,
+.o_web_client .o_form_button_save:focus,
+.o_web_client .o_list_button_add:hover,
+.o_web_client .o_list_button_add:focus,
+.o_web_client .o-kanban-button-new:hover,
+.o_web_client .o-kanban-button-new:focus,
+.o_web_client .modal-footer .btn-primary:hover,
+.o_web_client .modal-footer .btn-primary:focus {
+    background-color: var(--hf-odoo-teal-hover) !important;
+    border-color: var(--hf-odoo-teal-hover) !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .btn-primary:active,
+.o_web_client .btn-primary.active,
+.o_web_client .btn-primary.show,
+.o_web_client .show > .btn-primary.dropdown-toggle,
+.o_web_client .o_form_button_save:active,
+.o_web_client .o_list_button_add:active {
+    background-color: var(--hf-odoo-teal-active) !important;
+    border-color: var(--hf-odoo-teal-active) !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .btn-primary:disabled,
+.o_web_client .btn-primary.disabled {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #ffffff !important;
+    opacity: 0.65;
+}
+
+/* Purple outline buttons become teal without changing their dimensions. */
+.o_web_client .btn-outline-primary {
+    border-color: var(--hf-odoo-teal) !important;
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .btn-outline-primary:hover,
+.o_web_client .btn-outline-primary:focus,
+.o_web_client .btn-outline-primary:active,
+.o_web_client .btn-outline-primary.active,
+.o_web_client .show > .btn-outline-primary.dropdown-toggle {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #ffffff !important;
+}
+
+/* Common Odoo button-like toggles that inherit the primary purple accent. */
+.o_web_client .text-primary,
+.o_web_client .btn-link.text-primary,
+.o_web_client button.text-primary {
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .bg-primary {
+    background-color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .border-primary {
+    border-color: var(--hf-odoo-teal) !important;
+}
+
+/* Focus ring follows the new brand color. */
+.o_web_client .btn-primary:focus,
+.o_web_client .btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 128, 128, 0.25) !important;
+}
+
+/* Native-style Odoo systray on the teal header ---------------------------
+ * Keep Odoo's original controls and behavior; only normalize foreground,
+ * spacing and vertical alignment so activities, messages, company and user
+ * items look like the standard Odoo navbar.
+ */
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray {
+    align-self: stretch !important;
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    margin-left: auto !important;
+    padding: 0 !important;
+    color: #fff !important;
+}
+
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray > * {
+    display: flex !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    color: #fff !important;
+}
+
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray :is(
+    .dropdown-toggle,
+    .o_nav_entry,
+    button,
+    a
+) {
+    display: inline-flex !important;
+    min-width: 36px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #fff !important;
+    line-height: 1 !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+}
+
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray :is(
+    .dropdown-toggle,
+    .o_nav_entry,
+    button,
+    a
+) :is(i, .fa, .oi, svg) {
+    color: #fff !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+}
+
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray :is(
+    .dropdown-toggle,
+    .o_nav_entry,
+    button,
+    a
+):is(:hover, :focus, .show) {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #fff !important;
+}
+
+/* Company switcher and user menu should stay on the same baseline. */
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray :is(
+    .o_switch_company_menu,
+    .o_user_menu
+) .dropdown-toggle {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray .o_user_menu .o_user_avatar,
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray .o_user_menu img {
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    object-fit: cover !important;
+}
+
+/* Clear counters in the same compact position as standard Odoo. */
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray :is(
+    .badge,
+    .o_notification_counter
+) {
+    display: inline-flex !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: -11px 0 0 -7px !important;
+    padding: 0 4px !important;
+    border: 2px solid #008080 !important;
+    border-radius: 999px !important;
+    background: #20b759 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 12px !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+}
+
+/* Presence dot remains crisp over the user avatar. */
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray .o_user_menu :is(
+    .o_user_status,
+    .o_presence_icon,
+    .o_presence_status
+) {
+    border-color: #008080 !important;
+}
+
+/* Hide the duplicate company avatar shown beside the company switcher.
+ * Keep the company label and the real user avatar untouched.
+ */
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray .o_switch_company_menu :is(
+    img,
+    .o_user_avatar,
+    .o_company_avatar,
+    .avatar
+) {
+    display: none !important;
+}
+
+/* Remove only the duplicate systray helper that exposes the "Toggle menu"
+ * tooltip. The real user avatar/menu remains untouched.
+ */
+.o_web_client > header.o_navbar .o_main_navbar .o_menu_systray :is(
+    [title="Toggle menu"],
+    [aria-label="Toggle menu"],
+    [data-tooltip="Toggle menu"],
+    [data-bs-original-title="Toggle menu"],
+    [data-original-title="Toggle menu"]
+) {
+    display: none !important;
+}
+
+/* -------------------------------------------------------------------------
+ * Full Odoo primary-accent replacement
+ * -------------------------------------------------------------------------
+ * Odoo still ships a number of compiled primary/purple accents that do not
+ * always inherit the generic Bootstrap variables above. Keep semantic colors
+ * (success/warning/danger) untouched and replace only the primary accent.
+ */
+.o_web_client {
+    --bs-link-color: var(--hf-odoo-teal);
+    --bs-link-hover-color: var(--hf-odoo-teal-hover);
+    --bs-primary-text-emphasis: var(--hf-odoo-teal-active);
+    --bs-primary-bg-subtle: var(--hf-odoo-teal-soft);
+    --bs-primary-border-subtle: rgba(0, 128, 128, 0.28);
+    --o-action: var(--hf-odoo-teal);
+    --o-component-active-bg: var(--hf-odoo-teal);
+    --o-component-active-color: #fff;
+    --o-input-focus-border-color: var(--hf-odoo-teal);
+    --o-caret-color: var(--hf-odoo-teal);
+}
+
+/* Breadcrumbs, normal backend links and external-link icons. */
+.o_web_client .breadcrumb a,
+.o_web_client .o_breadcrumb a,
+.o_web_client .o_control_panel a:not(.btn),
+.o_web_client .o_form_view a:not(.btn):not(.badge),
+.o_web_client .o_list_view a:not(.btn):not(.badge),
+.o_web_client .o_field_widget .o_external_button,
+.o_web_client .o_field_many2one_selection .o_external_button {
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .breadcrumb a:hover,
+.o_web_client .o_breadcrumb a:hover,
+.o_web_client .o_control_panel a:not(.btn):hover,
+.o_web_client .o_form_view a:not(.btn):not(.badge):hover,
+.o_web_client .o_list_view a:not(.btn):not(.badge):hover {
+    color: var(--hf-odoo-teal-hover) !important;
+}
+
+/* Smart/stat buttons. */
+.o_web_client .oe_button_box .oe_stat_button .o_stat_value,
+.o_web_client .oe_button_box .oe_stat_button .o_stat_text,
+.o_web_client .oe_button_box .oe_stat_button .o_button_icon,
+.o_web_client .oe_button_box .oe_stat_button i,
+.o_web_client .o_field_statinfo .o_stat_value {
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .oe_button_box .oe_stat_button:hover,
+.o_web_client .oe_button_box .oe_stat_button:focus {
+    background-color: var(--hf-odoo-teal-soft) !important;
+}
+
+/* Search facets / active filters. */
+.o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label,
+.o_web_client .o_searchview_facet .o_searchview_facet_label {
+    background-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+
+.o_web_client .o_searchview .o_searchview_facet,
+.o_web_client .o_searchview_facet {
+    border-color: rgba(0, 128, 128, 0.28) !important;
+}
+
+/* Dropdown selections, filter/group-by menus and search-panel selections. */
+.o_web_client .dropdown-item.active,
+.o_web_client .dropdown-item:active,
+.o_web_client .o_search_panel .list-group-item.active,
+.o_web_client .o_search_panel .o_search_panel_label.active,
+.o_web_client .o_search_panel .o_search_panel_category_value.active {
+    background-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+
+/* Tabs / notebooks and view switchers. */
+.o_web_client .nav-tabs .nav-link.active,
+.o_web_client .o_notebook_headers .nav-link.active,
+.o_web_client .o_cp_switch_buttons .btn.active,
+.o_web_client .o_switch_view.btn.active {
+    border-color: var(--hf-odoo-teal) !important;
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .nav-tabs .nav-link:hover,
+.o_web_client .o_notebook_headers .nav-link:hover,
+.o_web_client .o_cp_switch_buttons .btn:hover,
+.o_web_client .o_switch_view.btn:hover {
+    color: var(--hf-odoo-teal-hover) !important;
+}
+
+/* Checkboxes, radio buttons and switches. */
+.o_web_client .form-check-input:checked,
+.o_web_client input[type="checkbox"]:checked,
+.o_web_client input[type="radio"]:checked {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .form-check-input:focus,
+.o_web_client input[type="checkbox"]:focus,
+.o_web_client input[type="radio"]:focus,
+.o_web_client .form-control:focus,
+.o_web_client .o_input:focus {
+    border-color: var(--hf-odoo-teal) !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 128, 128, 0.18) !important;
+}
+
+/* Pagination and primary badges. */
+.o_web_client .pagination .page-link {
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .pagination .page-item.active .page-link,
+.o_web_client .badge.text-bg-primary,
+.o_web_client .text-bg-primary {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+
+/* Statusbar current step and primary list/kanban selection accents. */
+.o_web_client .o_statusbar_status .o_arrow_button_current,
+.o_web_client .o_statusbar_status .btn-primary {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+
+.o_web_client .o_list_view .o_data_row.o_selected_row > .o_data_cell,
+.o_web_client .o_kanban_view .o_kanban_record.o_record_selected {
+    background-color: var(--hf-odoo-teal-soft) !important;
+}
+
+/* Generic primary icons/text frequently used by Odoo control panels. */
+.o_web_client :is(.fa, .oi).text-primary,
+.o_web_client .o_button_icon.text-primary,
+.o_web_client .o_field_widget.text-primary {
+    color: var(--hf-odoo-teal) !important;
+}
+
+/* HisabFlow complete purple -> teal cleanup ------------------------------
+ * Odoo uses brand-primary on several controls without .text-primary.
+ * These selectors intentionally change color only; layout/behavior remains
+ * native Odoo.
+ */
+
+/* Smart/stat buttons: icon, number and hover/focus accent. */
+.o_web_client .o_form_view .oe_button_box .oe_stat_button,
+.o_web_client .o_form_view .oe_button_box .o_stat_button,
+.o_web_client .o_button_box .oe_stat_button,
+.o_web_client .o_button_box .o_stat_button {
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .o_form_view .oe_button_box .oe_stat_button :is(.o_button_icon, .fa, .oi, i, svg),
+.o_web_client .o_form_view .oe_button_box .o_stat_button :is(.o_button_icon, .fa, .oi, i, svg),
+.o_web_client .o_button_box :is(.oe_stat_button, .o_stat_button) :is(.o_button_icon, .fa, .oi, i, svg),
+.o_web_client :is(.oe_stat_button, .o_stat_button) .o_stat_info :is(.o_stat_value, .o_stat_text) {
+    color: var(--hf-odoo-teal) !important;
+    fill: currentColor !important;
+}
+
+.o_web_client :is(.oe_stat_button, .o_stat_button):is(:hover, :focus, :active) {
+    color: var(--hf-odoo-teal-hover) !important;
+    border-color: rgba(0, 128, 128, 0.32) !important;
+}
+
+/* Breadcrumbs, clickable field links and generic Odoo links. */
+.o_web_client .breadcrumb a,
+.o_web_client .o_control_panel .breadcrumb a,
+.o_web_client .o_breadcrumb a,
+.o_web_client .o_form_view a:not(.btn):not(.dropdown-item),
+.o_web_client .o_list_view a:not(.btn):not(.dropdown-item),
+.o_web_client .o_kanban_view a:not(.btn):not(.dropdown-item),
+.o_web_client .o_field_widget.o_field_many2one a,
+.o_web_client .o_field_widget .o_external_button,
+.o_web_client .o_form_uri,
+.o_web_client .o_field_url a {
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .breadcrumb a:hover,
+.o_web_client .o_control_panel .breadcrumb a:hover,
+.o_web_client .o_breadcrumb a:hover,
+.o_web_client .o_form_view a:not(.btn):not(.dropdown-item):hover,
+.o_web_client .o_list_view a:not(.btn):not(.dropdown-item):hover,
+.o_web_client .o_kanban_view a:not(.btn):not(.dropdown-item):hover {
+    color: var(--hf-odoo-teal-hover) !important;
+}
+
+/* Search facets / filter chips / autocomplete active values. */
+.o_web_client :is(.o_searchview_facet, .o_search_view_facet) .o_searchview_facet_label,
+.o_web_client :is(.o_searchview_facet, .o_search_view_facet) .o_facet_values,
+.o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+
+.o_web_client .o_searchview .o_searchview_facet .o_facet_values,
+.o_web_client .o_searchview .o_searchview_facet .o_facet_value {
+    background-color: var(--hf-odoo-teal-soft) !important;
+    color: var(--hf-odoo-teal-active) !important;
+}
+
+.o_web_client :is(.o_searchview_autocomplete, .o_command_palette) :is(.active, .o_active, [aria-selected="true"]) {
+    background-color: var(--hf-odoo-teal-soft) !important;
+    color: var(--hf-odoo-teal-active) !important;
+}
+
+/* Notebook/tab underline and nav pills. */
+.o_web_client .o_notebook_headers .nav-link.active,
+.o_web_client .nav-tabs .nav-link.active {
+    border-bottom-color: var(--hf-odoo-teal) !important;
+    color: var(--hf-odoo-teal) !important;
+}
+
+.o_web_client .nav-pills .nav-link.active,
+.o_web_client .nav-pills .show > .nav-link {
+    background-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+
+/* List/filter controls and selection accents. */
+.o_web_client .o_list_view thead .o_list_controller .o_list_button,
+.o_web_client .o_optional_columns_dropdown .dropdown-item.active,
+.o_web_client .o_group_by_menu .dropdown-item.active,
+.o_web_client .o_filter_menu .dropdown-item.active,
+.o_web_client .o_favorite_menu .dropdown-item.active,
+.o_web_client .o_search_panel .active,
+.o_web_client .o_search_panel .selected {
+    color: var(--hf-odoo-teal) !important;
+}
+
+/* Switches/toggles including Odoo settings toggles. */
+.o_web_client .form-switch .form-check-input:checked,
+.o_web_client .o_boolean_toggle input:checked + .o_boolean_toggle_track,
+.o_web_client .o_switch input:checked + span,
+.o_web_client .o_switch input:checked + .o_switch_body {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+}
+
+/* Native pager / view switch / filter icons that use brand purple. */
+.o_web_client :is(
+    .o_pager,
+    .o_cp_switch_buttons,
+    .o_search_options,
+    .o_searchview,
+    .o_control_panel
+) :is(.btn-link, .o_button_icon, .fa, .oi).text-primary,
+.o_web_client .o_control_panel .btn-link:not(:disabled),
+.o_web_client .o_searchview .o_searchview_icon {
+    color: var(--hf-odoo-teal) !important;
+}
+
+/* Progress bars and primary spinners. */
+.o_web_client .progress-bar,
+.o_web_client .spinner-border.text-primary,
+.o_web_client .spinner-grow.text-primary {
+    background-color: var(--hf-odoo-teal) !important;
+    color: var(--hf-odoo-teal) !important;
+}
+
+/* Calendar and generic primary accent helpers. */
+.o_web_client :is(.link-primary, .link-primary:visited),
+.o_web_client .o_calendar_view .fc-event.o_calendar_color_0,
+.o_web_client .o_calendar_view .fc-highlight {
+    color: var(--hf-odoo-teal) !important;
+}

@@ -1,0 +1,20 @@
+HisabFlow Basic B2B Theme 19.0.1.5.8
+=====================================
+
+Changes
+-------
+1. Dashboard KPI amount font reduced to:
+   font-size: clamp(13px, 1.05vw, 17px);
+
+2. Desktop sidebar changed to a Hostinger-style two-level navigation:
+   - HisabFlow Home keeps the full 238px application sidebar.
+   - Opening Sales/Purchase/Inventory/etc. automatically shrinks the main
+     application list to the existing 76px icon rail.
+   - A separate 218px white submenu panel opens beside the icon rail and
+     displays only the active application's accessible menu sections.
+   - Odoo's native menu service remains responsible for navigation and access.
+   - The content canvas reserves the complete rail + submenu width; menus do
+     not overlay forms, lists, kanbans or dashboards.
+   - Tablet/mobile behavior remains on Odoo's native responsive navigation.
+
+3. The HisabFlow brand and submenu back arrow return to HisabFlow Home.

@@ -1,0 +1,21 @@
+HisabFlow UI + Dashboard Aggregation Fix - 19.0.1.5.6
+======================================================
+
+1) Dashboard local-date / timezone fix
+- Browser local date is used for the initial dashboard range.
+- Datetime domains convert the selected local-date boundaries to UTC.
+- Prevents records shown as e.g. 29 Aug in Odoo from being excluded because
+  the container/server is still on 28 Aug UTC.
+
+2) Exact drill-down aggregation
+- Clickable KPI cards now recompute record_count from the exact action model/domain.
+- Count KPIs use the exact linked record count.
+- Amount KPIs sum the exact linked recordset field (sale/purchase/POS totals,
+  receivables/payables, bank balance, stock quantities, etc.).
+- Aggregation errors are logged instead of being silently hidden as zeros.
+
+3) Purple -> HisabFlow teal
+- Adds an Odoo primary-variable SCSS override through web._assets_primary_variables.
+- Adds a last-load high-specificity backend color pass for native smart/stat
+  button icons and remaining primary accents.
+- Extends frontend/portal teal overrides.

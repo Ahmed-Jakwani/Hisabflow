@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_hisabflow_menu_access" model="ir.ui.view">
+        <field name="name">res.users.form.hisabflow.menu.access</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="priority" eval="99"/>
+        <field name="arch" type="xml">
+            <!-- Odoo 19: put the checkbox directly in the visible Roles block.
+                 This avoids relying on the dynamic res_user_group_ids widget. -->
+            <xpath expr="//page[@name='access_rights']//field[@name='role']" position="after">
+                <field name="hf_hisabflow_menu_access"
+                       string="HisabFlow Menu"
+                       help="Tick this checkbox to show the HisabFlow dashboard menu for this user."/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

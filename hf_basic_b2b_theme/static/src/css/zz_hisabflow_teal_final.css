@@ -1,0 +1,118 @@
+/* Final high-specificity HisabFlow accent pass.
+ * This file intentionally loads last in web.assets_backend and only changes
+ * colors, not Odoo layout or behavior.
+ */
+html body .o_web_client {
+    --primary: #008080 !important;
+    --bs-primary: #008080 !important;
+    --bs-primary-rgb: 0, 128, 128 !important;
+    --o-brand-primary: #008080 !important;
+    --o-brand-odoo: #008080 !important;
+    --o-action: #008080 !important;
+}
+
+/* Odoo smart/stat buttons: truck, invoice, delivery, payment, chatter, etc. */
+html body .o_web_client .o_form_view :is(.oe_button_box, .o_button_box) :is(button.oe_stat_button, button.o_stat_button, .oe_stat_button, .o_stat_button) {
+    --bs-btn-color: #008080 !important;
+    --bs-btn-hover-color: #006f6f !important;
+    color: #008080 !important;
+}
+html body .o_web_client .o_form_view :is(.oe_button_box, .o_button_box) :is(.oe_stat_button, .o_stat_button) :is(
+    .o_button_icon,
+    .o_stat_icon,
+    .fa,
+    .oi,
+    i,
+    svg,
+    .o_field_widget:not(.o_field_statinfo),
+    [class*="icon"]
+) {
+    color: #008080 !important;
+    fill: #008080 !important;
+    stroke: #008080 !important;
+}
+html body .o_web_client .o_form_view :is(.oe_button_box, .o_button_box) :is(.oe_stat_button, .o_stat_button) svg :is(path, use, g) {
+    color: #008080 !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+}
+html body .o_web_client .o_form_view :is(.oe_button_box, .o_button_box) :is(.oe_stat_button, .o_stat_button):is(:hover, :focus, :active) :is(
+    .o_button_icon,
+    .o_stat_icon,
+    .fa,
+    .oi,
+    i,
+    svg,
+    .o_field_widget:not(.o_field_statinfo),
+    [class*="icon"]
+) {
+    color: #006f6f !important;
+    fill: #006f6f !important;
+    stroke: #006f6f !important;
+}
+
+/* Native Odoo primary text/icons and common compiled purple accents. */
+html body .o_web_client :is(
+    .text-primary,
+    .link-primary,
+    .o_external_button,
+    .o_form_uri,
+    .o_searchview_icon,
+    .o_button_icon.text-primary,
+    .o_field_widget.text-primary
+) {
+    color: #008080 !important;
+}
+html body .o_web_client :is(.bg-primary, .text-bg-primary, .badge.text-bg-primary) {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+}
+html body .o_web_client :is(.border-primary, .btn-outline-primary) {
+    border-color: #008080 !important;
+}
+html body .o_web_client .btn-outline-primary { color: #008080 !important; }
+html body .o_web_client .btn-outline-primary:is(:hover, :focus, :active, .active),
+html body .o_web_client .btn-primary {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #fff !important;
+}
+html body .o_web_client .btn-primary:is(:hover, :focus, :active, .active) {
+    background-color: #006f6f !important;
+    border-color: #006f6f !important;
+}
+
+html body .o_web_client :is(.breadcrumb, .o_breadcrumb) a,
+html body .o_web_client :is(.o_form_view, .o_list_view, .o_kanban_view) a:not(.btn):not(.badge):not(.dropdown-item) {
+    color: #008080 !important;
+}
+html body .o_web_client :is(.breadcrumb, .o_breadcrumb) a:hover,
+html body .o_web_client :is(.o_form_view, .o_list_view, .o_kanban_view) a:not(.btn):not(.badge):not(.dropdown-item):hover {
+    color: #006f6f !important;
+}
+
+html body .o_web_client :is(.o_searchview_facet, .o_search_view_facet) .o_searchview_facet_label,
+html body .o_web_client .dropdown-item.active,
+html body .o_web_client .dropdown-item:active,
+html body .o_web_client .nav-pills .nav-link.active,
+html body .o_web_client .pagination .page-item.active .page-link,
+html body .o_web_client .progress-bar {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #fff !important;
+}
+html body .o_web_client :is(.nav-tabs, .o_notebook_headers) .nav-link.active,
+html body .o_web_client .pagination .page-link,
+html body .o_web_client :is(.o_cp_switch_buttons, .o_search_options, .o_pager) .btn-link:not(:disabled) {
+    color: #008080 !important;
+    border-bottom-color: #008080 !important;
+}
+html body .o_web_client :is(.form-check-input, input[type="checkbox"], input[type="radio"]):checked,
+html body .o_web_client .form-switch .form-check-input:checked {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+}
+html body .o_web_client :is(.form-control, .form-select, .o_input, .form-check-input):focus {
+    border-color: #008080 !important;
+    box-shadow: 0 0 0 .2rem rgba(0, 128, 128, .18) !important;
+}

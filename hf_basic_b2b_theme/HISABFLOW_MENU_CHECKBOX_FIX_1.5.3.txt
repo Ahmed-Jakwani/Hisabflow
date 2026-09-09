@@ -1,0 +1,15 @@
+HisabFlow Menu Checkbox Fix - 19.0.1.5.3
+=========================================
+
+Requirement:
+- The HisabFlow backend theme remains active for all users.
+- Only the HisabFlow dashboard menu (HisabFlow > Overview) is controlled per user.
+- Tick Settings > Users > Access Rights > HisabFlow Access > HisabFlow Menu to show it.
+- Untick it to hide the HisabFlow dashboard menu.
+
+Implementation:
+- No res.groups XML record is used.
+- No groups= XML attribute is used on HisabFlow menus.
+- A stored boolean field on res.users controls visibility.
+- ir.ui.menu._visible_menu_ids() removes the HisabFlow menu tree when the boolean is false.
+- Menu caches are cleared when the checkbox changes.

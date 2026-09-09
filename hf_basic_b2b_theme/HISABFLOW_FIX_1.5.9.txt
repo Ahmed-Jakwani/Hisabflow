@@ -1,0 +1,19 @@
+HisabFlow Basic B2B Theme 19.0.1.5.9
+=====================================
+
+Navigation update
+-----------------
+- Removed the 1.5.8 Hostinger-style secondary submenu column.
+- Removed automatic desktop icon-rail collapse.
+- Main Odoo applications now stay in the full HisabFlow left sidebar.
+- Current application's sections/submenus use Odoo 19's native top-navbar
+  .o_menu_sections and dropdown behaviour.
+- Discuss / Accounting / Inventory / POS keep their standard application
+  canvas instead of losing width to an extra custom submenu panel.
+- Permissions and menu visibility remain controlled by Odoo's menu service.
+- Mobile/tablet continues to fall back to Odoo's native responsive navbar.
+
+Dashboard KPI amount
+--------------------
+- Kept the approved compact KPI amount size:
+  font-size: clamp(13px, 1.05vw, 17px);

@@ -1,0 +1,16 @@
+HisabFlow Menu Checkbox - v19.0.1.5.4
+======================================
+
+The user checkbox is now inserted directly after the standard Odoo 19 `role`
+field inside Settings > Users > Access Rights > Roles.
+
+Expected UI:
+Role:       User / Administrator
+HisabFlow Menu:  [ ]
+
+Checkbox behavior:
+- Checked: HisabFlow root menu + Overview are visible.
+- Unchecked: only the HisabFlow root menu tree is hidden.
+- The HisabFlow backend theme remains active either way.
+
+No res.groups XML ID is used for this feature.

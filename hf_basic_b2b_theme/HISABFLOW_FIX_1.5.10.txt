@@ -1,0 +1,9 @@
+HisabFlow Basic B2B Theme 19.0.1.5.10
+
+Change:
+- Reduced the desktop main sidebar width from 238px to 215px.
+- Kept all existing native-header submenu behavior unchanged.
+- No change to menu logic, permissions, dashboard, backend actions, or responsive mobile behavior.
+
+Reason:
+- Gives more horizontal workspace while keeping the full app labels readable.

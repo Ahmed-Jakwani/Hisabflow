@@ -1,0 +1,25 @@
+HisabFlow Theme 19.0.1.5.19
+============================
+
+Dashboard search — placed right after Overview:
+
+Client feedback: the true-centered search box from v1.5.18 floats in the
+middle of the header, but the requested layout is simply
+
+    Overview   [ Search anything... ]                    [native systray]
+
+with the search box immediately to the right of "Overview" (not centered
+in the header).
+
+Fix
+---
+- `.o_menu_sections` (native "Overview" label) keeps its own natural
+  width instead of being stretched to an equal flex share.
+- `.hf-dashboard-global-search` follows it directly in normal document
+  flow with a small 22px gap - no `position: fixed/absolute`, no `vw`
+  math.
+- `.o_menu_systray` keeps `margin-left: auto`, so the native systray icons
+  stay pinned to the far right of the header, same as before.
+
+Only the >= 1200px desktop dashboard header is affected. Other apps and
+smaller breakpoints are untouched.

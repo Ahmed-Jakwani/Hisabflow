@@ -1,0 +1,15 @@
+HisabFlow Theme - v19.0.1.5.5
+
+1) Complete purple-to-teal cleanup
+- Smart/stat button icons and values
+- Breadcrumbs and record links
+- Search facets/filter chips and active dropdown items
+- Tabs, pills, pager/view/search controls
+- Checkboxes, radios, switches, focus rings
+- Backend primary accents
+- Portal/frontend primary buttons, links, filters and controls
+
+2) Dashboard KPI mismatch fix
+- KPI record counts now use model.search(domain), identical to drill-down semantics.
+- KPI amounts/quantities now sum the exact accessible recordset returned by model.search(domain).
+- Removes read_group/search_count mismatch and silent 0 results when drill-down records exist.

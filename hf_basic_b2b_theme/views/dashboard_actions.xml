@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The actions remain defined so later phases can reuse the same external IDs. -->
+    <record id="action_hf_overview" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'overview'}</field>
+    </record>
+    <record id="action_hf_sales" model="ir.actions.client">
+        <field name="name">Sales</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'sales'}</field>
+    </record>
+    <record id="action_hf_purchases" model="ir.actions.client">
+        <field name="name">Purchases</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'purchases'}</field>
+    </record>
+    <record id="action_hf_inventory" model="ir.actions.client">
+        <field name="name">Inventory</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'inventory'}</field>
+    </record>
+    <record id="action_hf_accounting" model="ir.actions.client">
+        <field name="name">Accounting</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'accounting'}</field>
+    </record>
+    <record id="action_hf_manufacturing" model="ir.actions.client">
+        <field name="name">Manufacturing</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'manufacturing'}</field>
+    </record>
+    <record id="action_hf_pos" model="ir.actions.client">
+        <field name="name">Point of Sale</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'pos'}</field>
+    </record>
+    <record id="action_hf_kitchen" model="ir.actions.client">
+        <field name="name">Kitchen Display</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'kitchen'}</field>
+    </record>
+    <record id="action_hf_receipt" model="ir.actions.client">
+        <field name="name">Customer Receipt</field>
+        <field name="tag">hf_basic_b2b_theme.Dashboard</field>
+        <field name="context">{'dashboard_type': 'receipt'}</field>
+    </record>
+
+    <menuitem id="menu_hf_root" name="HisabFlow" sequence="1"
+              action="action_hf_overview"
+              web_icon="hf_basic_b2b_theme,static/description/icon.png"/>
+    <menuitem id="menu_hf_overview" name="Overview" parent="menu_hf_root"
+              action="action_hf_overview" sequence="1"/>
+
+    <!-- Phase 1: keep unfinished custom dashboards hidden instead of exposing them. -->
+    <record id="menu_hf_sales" model="ir.ui.menu">
+        <field name="name">Sales</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_sales')"/>
+        <field name="sequence">10</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_purchases" model="ir.ui.menu">
+        <field name="name">Purchases</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_purchases')"/>
+        <field name="sequence">20</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_inventory" model="ir.ui.menu">
+        <field name="name">Inventory</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_inventory')"/>
+        <field name="sequence">30</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_accounting" model="ir.ui.menu">
+        <field name="name">Accounting</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_accounting')"/>
+        <field name="sequence">40</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_manufacturing" model="ir.ui.menu">
+        <field name="name">Manufacturing</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_manufacturing')"/>
+        <field name="sequence">50</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_pos" model="ir.ui.menu">
+        <field name="name">Point of Sale</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_pos')"/>
+        <field name="sequence">60</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_kitchen" model="ir.ui.menu">
+        <field name="name">Kitchen Display</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_kitchen')"/>
+        <field name="sequence">70</field>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="menu_hf_receipt" model="ir.ui.menu">
+        <field name="name">Customer Receipt</field>
+        <field name="parent_id" ref="menu_hf_root"/>
+        <field name="action" eval="'ir.actions.client,%d' % ref('action_hf_receipt')"/>
+        <field name="sequence">80</field>
+        <field name="active" eval="False"/>
+    </record>
+</odoo>

@@ -1,0 +1,10 @@
+HisabFlow Basic B2B Theme 19.0.1.5.11
+
+Dashboard topbar glitch fix
+===========================
+- Hides Odoo 19 native navbar breadcrumb only while the HisabFlow dashboard/home app is active.
+- Prevents the native "Overview" action label from rendering underneath the absolute dashboard global-search control.
+- Keeps the dashboard hamburger/home button and global search unchanged.
+- Keeps native Odoo breadcrumbs/submenus untouched in Sales, Inventory, Accounting, Purchase and other applications.
+- Sidebar width remains 215px.
+- KPI amount font remains clamp(13px, 1.05vw, 17px).

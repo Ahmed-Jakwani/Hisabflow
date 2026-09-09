@@ -1,0 +1,105 @@
+/* HisabFlow portal / website brand-primary override.
+ * Color-only overrides so portal structure and website snippets are untouched.
+ */
+:root {
+    --hf-odoo-teal: #008080;
+    --hf-odoo-teal-hover: #006f6f;
+    --hf-odoo-teal-active: #005f5f;
+    --hf-odoo-teal-soft: rgba(0, 128, 128, 0.12);
+    --primary: #008080;
+    --bs-primary: #008080;
+    --bs-primary-rgb: 0, 128, 128;
+    --o-brand-primary: #008080;
+    --o-brand-odoo: #008080;
+}
+
+body :is(.btn-primary, .bg-primary, .text-bg-primary, .badge.text-bg-primary) {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+body .btn-primary:is(:hover, :focus, :active),
+body .btn-primary.active {
+    background-color: var(--hf-odoo-teal-hover) !important;
+    border-color: var(--hf-odoo-teal-hover) !important;
+    color: #fff !important;
+}
+body .btn-outline-primary {
+    color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+}
+body .btn-outline-primary:is(:hover, :focus, :active),
+body .btn-outline-primary.active {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+body :is(.text-primary, .link-primary),
+body a:not(.btn):not(.dropdown-item) {
+    color: var(--hf-odoo-teal) !important;
+}
+body a:not(.btn):not(.dropdown-item):hover {
+    color: var(--hf-odoo-teal-hover) !important;
+}
+body .border-primary { border-color: var(--hf-odoo-teal) !important; }
+body .form-check-input:checked,
+body .form-switch .form-check-input:checked {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+}
+body :is(.form-control, .form-select, .form-check-input):focus {
+    border-color: var(--hf-odoo-teal) !important;
+    box-shadow: 0 0 0 .2rem rgba(0, 128, 128, .18) !important;
+}
+body .pagination .page-link { color: var(--hf-odoo-teal) !important; }
+body .pagination .page-item.active .page-link,
+body .nav-pills .nav-link.active,
+body .dropdown-item.active,
+body .dropdown-item:active,
+body .progress-bar {
+    background-color: var(--hf-odoo-teal) !important;
+    border-color: var(--hf-odoo-teal) !important;
+    color: #fff !important;
+}
+body .nav-tabs .nav-link.active {
+    color: var(--hf-odoo-teal) !important;
+    border-bottom-color: var(--hf-odoo-teal) !important;
+}
+
+/* Final portal/website primary accent pass. */
+html body {
+    --primary: #008080 !important;
+    --bs-primary: #008080 !important;
+    --bs-primary-rgb: 0, 128, 128 !important;
+    --o-brand-primary: #008080 !important;
+    --o-brand-odoo: #008080 !important;
+    --o-action: #008080 !important;
+}
+html body :is(.text-primary, .link-primary, .o_portal_chatter a, .o_portal_wrap a:not(.btn):not(.dropdown-item)) {
+    color: #008080 !important;
+}
+html body :is(.btn-primary, .bg-primary, .text-bg-primary, .badge.text-bg-primary, .progress-bar) {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #fff !important;
+}
+html body .btn-outline-primary { color: #008080 !important; border-color: #008080 !important; }
+html body .btn-outline-primary:is(:hover, :focus, :active, .active) {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #fff !important;
+}
+html body :is(.form-check-input, input[type="checkbox"], input[type="radio"]):checked {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+}
+html body .pagination .page-link,
+html body .nav-tabs .nav-link.active { color: #008080 !important; }
+html body .pagination .page-item.active .page-link,
+html body .nav-pills .nav-link.active,
+html body .dropdown-item.active,
+html body .dropdown-item:active {
+    background-color: #008080 !important;
+    border-color: #008080 !important;
+    color: #fff !important;
+}

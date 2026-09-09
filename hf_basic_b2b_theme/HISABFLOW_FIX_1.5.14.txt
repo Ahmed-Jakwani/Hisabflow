@@ -1,0 +1,11 @@
+HisabFlow Theme 19.0.1.5.14
+============================
+
+Dashboard topbar fix:
+- Removed the custom duplicate "Overview" label.
+- Kept Odoo's native Overview section as the single visible title/menu.
+- Removed the custom hamburger on desktop.
+- Moved global search into the native navbar flex flow, slightly to the right
+  of Overview, so it cannot overlap the section title.
+- Native systray remains untouched.
+- Other apps continue to use their normal Odoo section menus.

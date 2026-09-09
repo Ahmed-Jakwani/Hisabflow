@@ -1,0 +1,323 @@
+html,
+body.hisabflow-simple-login-body {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    margin: 0;
+    overflow: hidden !important;
+}
+
+body.hisabflow-simple-login-body {
+    background: #ffffff;
+    color: #1f2937;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+body.hisabflow-simple-login-body #wrapwrap,
+body.hisabflow-simple-login-body main {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.hf-simple-login,
+.hf-simple-login * {
+    box-sizing: border-box;
+}
+
+.hf-simple-login {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+/* LEFT: fixed viewport panel, Momentum-style */
+.hf-simple-login__intro {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: clamp(30px, 4vh, 48px) clamp(34px, 3.2vw, 54px);
+    background:
+        linear-gradient(160deg, rgba(3, 24, 45, 0.97) 0%, rgba(4, 54, 80, 0.91) 52%, rgba(5, 123, 126, 0.88) 100%),
+        url('/hisabflow_custom_login/static/src/img/auth-visual.jpg');
+    background-size: cover;
+    background-position: center 70%;
+    background-repeat: no-repeat;
+    border-right: 1px solid #e5e7eb;
+}
+
+.hf-simple-login__intro::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(2, 16, 34, 0.02) 40%, rgba(2, 21, 39, 0.24) 100%);
+    pointer-events: none;
+}
+
+.hf-simple-login__intro-copy {
+    position: relative;
+    z-index: 2;
+    max-width: 620px;
+}
+
+.hf-simple-login__wordmark-wrap {
+    margin-bottom: clamp(22px, 3vh, 34px);
+}
+
+.hf-simple-login__wordmark {
+    display: block;
+    width: auto;
+    max-width: clamp(160px, 13vw, 215px);
+    max-height: 52px;
+}
+
+.hf-simple-login__intro h1 {
+    margin: 0;
+    max-width: 640px;
+    color: #ffffff;
+    font-size: clamp(27px, 2.45vw, 42px);
+    font-weight: 760;
+    line-height: 1.14;
+    letter-spacing: -0.035em;
+}
+
+.hf-simple-login__intro-highlight {
+    color: #39e0d2;
+}
+
+.hf-simple-login__intro p {
+    max-width: 590px;
+    margin: clamp(11px, 1.6vh, 16px) 0 0;
+    color: #d8e8eb;
+    font-size: clamp(13px, 0.95vw, 15px);
+    line-height: 1.65;
+}
+
+.hf-simple-login__intro p strong {
+    color: #ffffff;
+}
+
+/* Decorative image layer only; never increases document height */
+.hf-simple-login__intro-art {
+    position: absolute;
+    z-index: 1;
+    left: 18%;
+    right: 5%;
+    bottom: -18%;
+    height: 57%;
+    border-radius: 34px 34px 0 0;
+    background: linear-gradient(180deg, rgba(3, 26, 52, 0.06), rgba(3, 26, 52, 0.32));
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+/* RIGHT: fixed viewport login area */
+.hf-simple-login__auth {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: clamp(24px, 4vh, 48px);
+    background: #ffffff;
+}
+
+.hf-simple-login__auth-inner {
+    width: 100%;
+    max-width: 420px;
+    max-height: 100%;
+    text-align: center;
+}
+
+.hf-simple-login__module-icons {
+    width: 100%;
+    min-height: 46px;
+    margin-bottom: clamp(18px, 2.3vh, 26px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.hf-simple-login__module-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #eef8fb 0%, #e5f7f5 100%);
+    border: 1px solid #d2ecea;
+    color: #078d98;
+    font-size: 17px;
+}
+
+.hf-simple-login__auth h2 {
+    margin: 0;
+    color: #202124;
+    font-size: clamp(30px, 2.1vw, 34px);
+    font-weight: 750;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+}
+
+.hf-simple-login__subtitle {
+    margin: 10px 0 clamp(22px, 3vh, 34px);
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.hf-simple-login__form {
+    width: 100%;
+    text-align: left;
+}
+
+.hf-simple-login__form .oe_login_form,
+.hf-simple-login__form .oe_signup_form,
+.hf-simple-login__form .oe_reset_password_form {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.hf-simple-login__form label {
+    margin-bottom: 7px;
+    color: #344054;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.hf-simple-login__form .form-control {
+    min-height: 46px;
+    border: 1px solid #d0d5dd;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #101828;
+    font-size: 14px;
+    box-shadow: none;
+}
+
+.hf-simple-login__form .form-control:focus {
+    border-color: #0799a5;
+    box-shadow: 0 0 0 3px rgba(7, 153, 165, 0.12);
+}
+
+.hf-simple-login__form .btn-primary {
+    min-height: 46px;
+    border-color: #0799a5;
+    border-radius: 4px;
+    background: #0799a5;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+.hf-simple-login__form .btn-primary:hover,
+.hf-simple-login__form .btn-primary:focus {
+    border-color: #087f89;
+    background: #087f89;
+}
+
+.hf-simple-login__form a {
+    color: #078d98;
+    text-decoration: none;
+}
+
+.hf-simple-login__form a:hover {
+    color: #066f77;
+    text-decoration: underline;
+}
+
+.hf-simple-login__form .oe_login_buttons {
+    padding-top: 10px !important;
+}
+
+.hf-simple-login__form button[name="redirect"] {
+    display: none !important;
+}
+
+/* Compact laptops: keep everything inside one viewport without scrolling. */
+@media (max-height: 760px) and (min-width: 901px) {
+    .hf-simple-login__intro {
+        padding-top: 28px;
+        padding-bottom: 28px;
+    }
+
+    .hf-simple-login__wordmark-wrap {
+        margin-bottom: 18px;
+    }
+
+    .hf-simple-login__intro h1 {
+        font-size: clamp(25px, 2.25vw, 36px);
+    }
+
+    .hf-simple-login__module-icons {
+        margin-bottom: 14px;
+    }
+
+    .hf-simple-login__auth h2 {
+        font-size: 30px;
+    }
+
+    .hf-simple-login__subtitle {
+        margin-bottom: 20px;
+    }
+
+    .hf-simple-login__form .form-control,
+    .hf-simple-login__form .btn-primary {
+        min-height: 42px;
+    }
+}
+
+/* Mobile/tablet can scroll because stacking two full panels is intentional there. */
+@media (max-width: 900px) {
+    html,
+    body.hisabflow-simple-login-body,
+    body.hisabflow-simple-login-body #wrapwrap,
+    body.hisabflow-simple-login-body main {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    .hf-simple-login {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .hf-simple-login__intro,
+    .hf-simple-login__auth {
+        height: auto;
+        min-height: auto;
+        overflow: hidden;
+    }
+
+    .hf-simple-login__intro {
+        min-height: 400px;
+        padding: 28px 24px 34px;
+        border-right: 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .hf-simple-login__intro h1 {
+        font-size: 28px;
+    }
+
+    .hf-simple-login__auth {
+        padding: 42px 24px;
+    }
+}

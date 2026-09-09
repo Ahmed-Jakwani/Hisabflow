@@ -1,0 +1,10 @@
+/* HisabFlow primary brand variables.
+ * Loaded before Odoo's own primary variables so compiled backend/frontend
+ * components (including smart buttons) are generated with teal instead of
+ * the stock purple brand color.
+ */
+$o-brand-odoo: #008080 !default;
+$o-brand-primary: #008080 !default;
+$o-action: #008080 !default;
+$o-enterprise-action-color: #008080 !default;
+$primary: #008080 !default;

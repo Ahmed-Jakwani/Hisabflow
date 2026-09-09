@@ -1,0 +1,67 @@
+HisabFlow Basic B2B Theme - v19.0.1.3.0
+=========================================
+Custom light sidebar + custom search topbar (matches the requested
+reference UI), 100% real Odoo functionality underneath.
+
+1. Header
+---------
+- The native `.o_main_navbar` row (the one that took each app's own color,
+  e.g. purple for Purchase) is now visually hidden with CSS. It still
+  exists in the DOM, unchanged.
+- A new fixed `.hf-topbar` reproduces the reference UI: hamburger toggle,
+  search box, chat icon, notification bell, avatar + name + role.
+- The search box opens Odoo's own command palette (the same Ctrl+K global
+  search Odoo already ships) - it is a trigger for the real thing, not a
+  fake search.
+- The chat icon, bell and avatar are the exact same native systray
+  Components Odoo would have rendered (Discuss/messaging, Activities,
+  User menu) - just relocated and restyled. Any other native systray item
+  (debug tools, Studio, apps store, etc.) is kept visible in a compact
+  icon cluster so nothing is ever lost.
+- Header color is controlled by 4 CSS variables in variables.css:
+  --hf-header-bg / --hf-header-text / --hf-header-text-muted /
+  --hf-header-border. Default is white with teal (#017B82) accents.
+  A ready-to-use teal variant (#017B82 background) is included as a
+  commented block directly below the default values - uncomment it and
+  comment out the white block to switch.
+
+2. Sidebar
+----------
+- Switched from the navy/dark theme to a light theme (white background,
+  slate icons, teal active state) to match the reference UI.
+- Added a collapse toggle (arrow in the sidebar header, and the hamburger
+  in the topbar) that shrinks the sidebar to icon-only width. The
+  preference is remembered per browser (localStorage).
+- The sidebar footer now renders Odoo's native multi-company switcher
+  component directly (falls back to the plan badge if multi-company is
+  not enabled for the user).
+- Sidebar app list is still fully dynamic (`menuService.getApps()`), so it
+  always reflects whichever Odoo apps are actually installed - nothing is
+  hard-coded.
+
+3. What did NOT change
+-----------------------
+- Breadcrumbs: unaffected. They live inside each view's own control panel,
+  not inside the navbar.
+- Every click still goes through the same Odoo services (menu, action,
+  command, notification) as before - only the visual container moved.
+- Small screens (< 992px) still fall back to Odoo's fully native navbar
+  and app menu, exactly as in the previous release.
+
+4. Recommendation on header color
+----------------------------------
+Shipped default = white header with teal (#017B82) accents, because:
+- It matches the requested reference UI, which uses a white header.
+- It reads as more "enterprise SaaS" - most B2B back-offices (and Odoo's
+  own Enterprise theme) use a neutral/white top bar so it doesn't compete
+  with colored KPI cards, charts and status badges in the dashboard.
+- A solid teal header still looks good and is very on-brand, but a full
+  block of #017B82 across the top of every single screen, all day, is
+  more visually heavy over long use, and can clash with red/orange
+  status badges (overdue, cancelled, etc.) sitting right next to it.
+- Using teal as an *accent* (active sidebar item, buttons, badges, the
+  focus ring on the search box) rather than as the whole header
+  background keeps the brand colour visible everywhere without the
+  fatigue of a large solid colour block.
+Switch to the full teal header any time using the commented block in
+variables.css - both are fully wired and tested against the same markup.

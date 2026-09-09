@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Anchored on web.login_layout, NOT website.login_layout, so this module
+         does not drag the whole Website app into every client database.
+
+         The xpath is deliberately `t[@t-call]` (match the single direct child
+         that carries a t-call) rather than a specific t-call value. The base
+         web.login_layout wraps its body in `web.frontend_layout`; if Website
+         happens to be installed, website.login_layout (priority 20) rewrites
+         that same node to `website.layout` before we run. Matching on the
+         attribute's presence keeps this template working in both cases -
+         pinning the value would make it explode whenever Website is present. -->
+    <template id="hisabflow_login_layout"
+              name="HisabFlow Login Layout"
+              inherit_id="web.login_layout"
+              priority="100">
+
+        <xpath expr="t[@t-call]" position="replace">
+            <t t-call="web.frontend_layout">
+                <t t-set="html_data" t-value="{'style': 'height: 100%; overflow: hidden;'}"/>
+                <t t-set="body_classname" t-value="'hisabflow-simple-login-body'"/>
+                <t t-set="no_header" t-value="True"/>
+                <t t-set="no_footer" t-value="True"/>
+                <t t-set="no_copyright" t-value="True"/>
+
+                <main class="hf-simple-login">
+                    <section class="hf-simple-login__intro">
+                        <div class="hf-simple-login__intro-copy">
+                            <div class="hf-simple-login__wordmark-wrap">
+                                <img src="/hisabflow_custom_login/static/src/img/hisabflow-logo-white.svg"
+                                     alt="HisabFlow"
+                                     class="hf-simple-login__wordmark"/>
+                            </div>
+
+                            <h1>
+                                One smart system for your
+                                <span class="hf-simple-login__intro-highlight">entire business operations</span>
+                            </h1>
+
+                            <p>
+                                <strong>HISABFLOW</strong> helps you manage sales, POS,
+                                inventory, accounting, and FBR-compliant invoicing from
+                                one connected platform built for growing businesses.
+                            </p>
+                        </div>
+
+                        <div class="hf-simple-login__intro-art" aria-hidden="true"></div>
+                    </section>
+
+                    <section class="hf-simple-login__auth">
+                        <div class="hf-simple-login__auth-inner">
+                            <div class="hf-simple-login__module-icons" aria-hidden="true">
+                                <div class="hf-simple-login__module-icon"><i class="fa fa-shopping-cart"></i></div>
+                                <div class="hf-simple-login__module-icon"><i class="fa fa-barcode"></i></div>
+                                <div class="hf-simple-login__module-icon"><i class="fa fa-calculator"></i></div>
+                                <div class="hf-simple-login__module-icon"><i class="fa fa-line-chart"></i></div>
+                            </div>
+
+                            <h2>Welcome Back</h2>
+
+                            <p class="hf-simple-login__subtitle">
+                                Manage your invoices, products, purchases, stock, finances,
+                                and business activity from one connected HisabFlow workspace.
+                            </p>
+
+                            <div class="hf-simple-login__form">
+                                <t t-out="0"/>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="hisabflow_login_form_labels" inherit_id="web.login" name="HisabFlow Login Form Labels">
+        <xpath expr="//label[@for='login']" position="replace">
+            <label for="login" class="form-label d-flex justify-content-between">Email</label>
+        </xpath>
+        <xpath expr="//div[hasclass('oe_login_buttons')]/button[@type='submit'][1]" position="replace">
+            <button type="submit" class="btn btn-primary">Log in</button>
+        </xpath>
+    </template>
+</odoo>

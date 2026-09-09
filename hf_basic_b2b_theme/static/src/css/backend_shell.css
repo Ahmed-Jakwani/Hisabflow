@@ -1,0 +1,929 @@
+/* HisabFlow Basic B2B backend shell --------------------------------------
+ *
+ * This file styles the left application sidebar and page canvas only.
+ * Odoo's native navbar/systray is deliberately preserved so the company
+ * switcher, activities, notifications, user menu and breadcrumbs keep their
+ * standard behaviour.
+ */
+
+.o_web_client {
+    --hf-current-sidebar-width: var(--hf-sidebar-width);
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--hf-bg);
+    color: var(--hf-text);
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Keep the standard Odoo navbar in the normal webclient flow and make room
+ * for the fixed HisabFlow sidebar. On desktop only Odoo's app launcher/brand
+ * are hidden because top-level apps live in the left sidebar; Odoo's native
+ * application section menus and systray remain in the navbar. */
+.o_web_client > header.o_navbar {
+    width: calc(100% - var(--hf-current-sidebar-width));
+    min-width: 0;
+    flex: 0 0 auto;
+    margin-left: var(--hf-current-sidebar-width);
+    transition: margin-left 0.2s ease, width 0.2s ease;
+    z-index: 1040;
+}
+
+.o_web_client > header.o_navbar .o_main_navbar {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    min-width: 0;
+}
+
+.o_web_client > .o_action_manager {
+    width: calc(100% - var(--hf-current-sidebar-width));
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    margin-left: var(--hf-current-sidebar-width);
+    background: var(--hf-bg);
+    transition: margin-left 0.2s ease, width 0.2s ease;
+}
+
+.o_web_client .o_action_manager > .o_action,
+.o_web_client .o_action_manager > .o_view_controller,
+.o_web_client .o_action_manager .o_content {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Leave room for an optional environment ribbon so native company/user
+ * controls remain visible and clickable. */
+body:has(.o_web_environment_ribbon) .o_web_client .o_main_navbar,
+body:has(.o_environment_ribbon) .o_web_client .o_main_navbar,
+body:has(.web_environment_ribbon) .o_web_client .o_main_navbar {
+    padding-right: 96px !important;
+}
+
+/* Sidebar ---------------------------------------------------------------- */
+.hf-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1050;
+    display: flex;
+    width: var(--hf-sidebar-width);
+    min-width: var(--hf-sidebar-width);
+    flex-direction: column;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 20% 5%, rgba(19, 177, 174, 0.10), transparent 28%),
+        linear-gradient(180deg, var(--hf-navy-950), var(--hf-navy-900) 55%, #04233f);
+    color: #fff;
+    box-shadow: 8px 0 30px rgba(0, 23, 46, 0.10);
+}
+
+.hf-sidebar-brand {
+    display: flex;
+    height: var(--hf-topbar-height);
+    min-height: var(--hf-topbar-height);
+    align-items: center;
+    padding: 0 17px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hf-sidebar-brand-link {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    text-decoration: none;
+}
+
+.hf-sidebar-logo-full {
+    display: block;
+    width: 145px;
+    max-width: 100%;
+    max-height: 34px;
+    object-fit: contain;
+    object-position: left center;
+}
+
+.hf-sidebar-scroll {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 14px 10px 18px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.20) transparent;
+}
+
+.hf-sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.hf-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hf-sidebar-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.20);
+}
+
+.hf-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.hf-sidebar-app,
+.hf-sidebar-section,
+.hf-sidebar-subsection {
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none !important;
+}
+
+.hf-sidebar-app {
+    position: relative;
+    display: flex;
+    min-height: 53px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 11px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 550;
+    transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.hf-sidebar-app:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    transform: translateX(1px);
+}
+
+.hf-sidebar-app.is-active {
+    background: linear-gradient(90deg, rgba(14, 171, 168, 0.96), rgba(10, 143, 145, 0.92));
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(0, 169, 165, 0.19);
+}
+
+.hf-sidebar-app-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    overflow: hidden;
+    border: 0;
+    border-radius: 11px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    box-shadow: 0 5px 12px rgba(0, 12, 29, 0.18);
+}
+
+.hf-sidebar-app-icon.has-image {
+    padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: #fff;
+}
+
+.hf-sidebar-app-icon img {
+    display: block;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    object-fit: contain;
+    filter: none !important;
+}
+
+.hf-sidebar-app-icon i {
+    line-height: 1;
+}
+
+.hf-sidebar-app-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hf-sidebar-angle-toggle {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    place-items: center;
+    margin: -2px -4px -2px 0;
+    border-radius: 7px;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.16s ease;
+}
+
+.hf-sidebar-angle-toggle:hover,
+.hf-sidebar-angle-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+    outline: none;
+}
+
+.hf-sidebar-angle {
+    opacity: 0.82;
+}
+
+.hf-sidebar-sections {
+    position: relative;
+    margin: 2px 0 7px 22px;
+    padding: 2px 0 2px 15px;
+    border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.hf-sidebar-section,
+.hf-sidebar-subsection {
+    display: flex;
+    min-height: 34px;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 9px;
+    border-radius: 7px;
+    font-size: 12.5px;
+}
+
+.hf-sidebar-section:hover,
+.hf-sidebar-subsection:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+}
+
+.hf-sidebar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.48);
+}
+
+.hf-sidebar-subsections {
+    padding-left: 15px;
+}
+
+.hf-sidebar-subsection {
+    min-height: 30px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+}
+
+.hf-sidebar-footer {
+    display: flex;
+    min-height: 73px;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 16, 34, 0.14);
+}
+
+.hf-sidebar-plan-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #21beb7, #087f8c);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+}
+
+.hf-sidebar-plan-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+}
+
+.hf-sidebar-plan-copy strong {
+    overflow: hidden;
+    color: #fff;
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hf-sidebar-plan-copy span {
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 10.5px;
+}
+
+.hf-sidebar-logout {
+    display: grid;
+    width: 31px;
+    height: 31px;
+    flex: 0 0 31px;
+    place-items: center;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.66);
+    text-decoration: none;
+}
+
+.hf-sidebar-logout:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #fff;
+}
+
+/* App icon fallback tones ------------------------------------------------ */
+.hf-app-tone-teal { background: linear-gradient(135deg, #13b7b0, #087c88); }
+.hf-app-tone-blue { background: linear-gradient(135deg, #4d9cff, #2867c9); }
+.hf-app-tone-violet { background: linear-gradient(135deg, #25b866, #008080); }
+.hf-app-tone-green { background: linear-gradient(135deg, #58c978, #239550); }
+.hf-app-tone-orange { background: linear-gradient(135deg, #ffad55, #e06e30); }
+.hf-app-tone-rose { background: linear-gradient(135deg, #ef7890, #bf4466); }
+.hf-app-tone-amber { background: linear-gradient(135deg, #ffc64e, #e48a21); }
+.hf-app-tone-indigo { background: linear-gradient(135deg, #36af6b, #017b82); }
+.hf-app-tone-cyan { background: linear-gradient(135deg, #42cbe3, #1588b0); }
+.hf-app-tone-yellow { background: linear-gradient(135deg, #f7d64d, #d99c1b); }
+.hf-app-tone-slate { background: linear-gradient(135deg, #7f91a8, #53677f); }
+
+/* On tablets/mobile, use Odoo's native app menu and give the full viewport
+ * back to the standard webclient. */
+@media (max-width: 991.98px) {
+    .hf-sidebar {
+        display: none;
+    }
+
+    .o_web_client {
+        --hf-current-sidebar-width: 0px;
+    }
+
+    .o_web_client > header.o_navbar,
+    .o_web_client > .o_action_manager {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+/* Main-app sidebar + native Odoo submenu header (v19.0.1.5.9) -----------
+ *
+ * Desktop:
+ * - HisabFlow keeps one full-width application sidebar on the left.
+ * - Odoo's original .o_menu_sections is visible in the teal top navbar.
+ * - No collapsed icon rail and no custom second submenu column.
+ *
+ * This is deliberately layout-light: Odoo still renders and controls its
+ * own section dropdowns, including permissions, overflow and menu actions.
+ */
+.o_web_client > header.o_navbar {
+    position: relative;
+    display: block;
+    height: var(--hf-topbar-height);
+    min-height: var(--hf-topbar-height);
+    border: 0;
+    box-shadow: 0 1px 0 rgba(4, 34, 66, 0.07), 0 5px 18px rgba(4, 34, 66, 0.045);
+}
+
+.o_web_client > header.o_navbar .o_main_navbar {
+    display: flex !important;
+    height: var(--hf-topbar-height) !important;
+    min-height: var(--hf-topbar-height);
+    align-items: center;
+    padding: 0 14px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* The app launcher/brand is represented by the permanent left sidebar.
+ * Keep Odoo's section entries and systray untouched. */
+.o_web_client > header.o_navbar .o_main_navbar > .o_menu_toggle,
+.o_web_client > header.o_navbar .o_main_navbar > .o_menu_brand,
+.o_web_client > header.o_navbar .o_main_navbar > .o_navbar_apps_menu {
+    display: none !important;
+}
+
+/* HisabFlow home has its custom global search and normally has no useful
+ * application section bar. Inside every other app, restore Odoo's native
+ * top-level sections exactly where Odoo expects them. */
+body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_sections {
+    display: none !important;
+}
+
+/* The dashboard already renders its own page title. Odoo 19 also injects
+ * the current action label (for example "Overview") into the navbar
+ * breadcrumbs slot. Because the HisabFlow dashboard search is an absolute
+ * header control, that native breadcrumb can sit underneath it and appear
+ * clipped/overlapped. Hide only the dashboard breadcrumb; native breadcrumbs
+ * remain untouched in Sales, Inventory, Accounting and every other app. */
+body.hf-hisabflow-home .o_web_client > header.o_navbar .o_navbar_breadcrumbs {
+    display: none !important;
+}
+
+body:not(.hf-hisabflow-home) .o_web_client > header.o_navbar .o_menu_sections {
+    display: flex !important;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-self: stretch;
+    align-items: stretch;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+body:not(.hf-hisabflow-home) .o_web_client > header.o_navbar .o_menu_sections > * {
+    min-width: 0;
+}
+
+body:not(.hf-hisabflow-home) .o_web_client > header.o_navbar .o_menu_sections :is(
+    .o_nav_entry,
+    .dropdown-toggle
+) {
+    display: inline-flex !important;
+    height: 100%;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 10px !important;
+    border-radius: 0 !important;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.o_web_client > header.o_navbar .o_menu_systray {
+    display: flex !important;
+    min-width: 0;
+    height: 100%;
+    flex: 0 0 auto;
+    align-items: center;
+    margin-left: auto !important;
+}
+
+/* Dashboard-only header search ------------------------------------------ */
+.hf-topbar-start {
+    position: absolute;
+    inset: 0 auto 0 16px;
+    z-index: 4;
+    display: flex;
+    width: min(455px, calc(100% - 430px));
+    min-width: 180px;
+    align-items: center;
+    gap: 14px;
+}
+
+body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+    padding-left: 500px !important;
+}
+
+body:not(.hf-hisabflow-home) .hf-topbar-start {
+    display: none;
+}
+
+.hf-sidebar-toggle {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.hf-sidebar-toggle > i,
+.hf-sidebar-toggle > .fa {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.hf-sidebar-toggle:hover,
+.hf-sidebar-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    outline: none;
+}
+
+.hf-global-search {
+    display: flex;
+    height: 34px;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 9px;
+    padding: 0 9px 0 11px;
+    border: 1px solid #e1e7ee;
+    border-radius: 4px;
+    background: #fff;
+    color: #7a8799;
+    box-shadow: 0 2px 7px rgba(4, 34, 66, 0.035);
+    cursor: text;
+    text-align: left;
+}
+
+.hf-global-search:hover,
+.hf-global-search:focus-visible {
+    border-color: rgba(1, 123, 130, 0.52);
+    box-shadow: 0 0 0 3px rgba(1, 123, 130, 0.08);
+    outline: none;
+}
+
+.hf-global-search-icon {
+    flex: 0 0 auto;
+    color: #7e8b9c;
+    font-size: 14px;
+}
+
+.hf-global-search-placeholder {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: #8a96a6;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hf-global-search-shortcut {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 3px;
+    color: #8a96a6;
+    font-size: 10px;
+}
+
+.hf-global-search-shortcut kbd {
+    padding: 2px 5px;
+    border: 1px solid #e1e6ec;
+    border-radius: 4px;
+    background: #f6f8fa;
+    color: #667386;
+    font-family: inherit;
+    font-size: 9px;
+    font-weight: 650;
+    box-shadow: none;
+}
+
+/* Refined fixed application sidebar ------------------------------------- */
+.hf-sidebar {
+    background:
+        radial-gradient(circle at 16% 4%, rgba(1, 123, 130, 0.13), transparent 29%),
+        linear-gradient(180deg, #032844 0%, #03233d 52%, #021d34 100%);
+    box-shadow: 7px 0 24px rgba(0, 23, 46, 0.09);
+}
+
+.hf-sidebar-brand {
+    padding: 0 20px;
+}
+
+.hf-sidebar-logo-full {
+    width: 148px;
+}
+
+.hf-sidebar-scroll {
+    padding: 15px 12px 18px;
+}
+
+.hf-sidebar-nav {
+    gap: 4px;
+}
+
+.hf-sidebar-app {
+    min-height: 47px;
+    gap: 13px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 520;
+}
+
+.hf-sidebar-app.is-active {
+    background: linear-gradient(90deg, #017b82, #07949b);
+    box-shadow: 0 7px 18px rgba(1, 123, 130, 0.26);
+}
+
+.hf-sidebar-app-icon,
+.hf-sidebar-app-icon.has-image {
+    display: grid;
+    width: 25px;
+    height: 25px;
+    flex: 0 0 25px;
+    place-items: center;
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 18px;
+    font-weight: 400;
+    box-shadow: none;
+}
+
+.hf-sidebar-app:hover .hf-sidebar-app-icon,
+.hf-sidebar-app.is-active .hf-sidebar-app-icon {
+    color: #fff;
+}
+
+.hf-sidebar-footer {
+    min-height: 70px;
+    background: rgba(0, 16, 34, 0.18);
+}
+
+.hf-sidebar-plan-icon {
+    background: linear-gradient(135deg, #07949b, #017b82);
+}
+
+/* Old 1.5.8 state classes are intentionally neutralized. They should no
+ * longer be emitted, but this protects hot asset reloads from stale body
+ * classes until the next complete page refresh. */
+body.hf-sidebar-is-collapsed .o_web_client,
+body.hf-sidebar-has-submenu .o_web_client {
+    --hf-current-sidebar-width: var(--hf-sidebar-width) !important;
+}
+
+body.hf-sidebar-is-collapsed .hf-sidebar {
+    width: var(--hf-sidebar-width) !important;
+    min-width: var(--hf-sidebar-width) !important;
+}
+
+body.hf-sidebar-is-collapsed .o_web_client > header.o_navbar,
+body.hf-sidebar-is-collapsed .o_web_client > .o_action_manager,
+body.hf-sidebar-has-submenu .o_web_client > header.o_navbar,
+body.hf-sidebar-has-submenu .o_web_client > .o_action_manager {
+    margin-left: var(--hf-sidebar-width) !important;
+    width: calc(100% - var(--hf-sidebar-width)) !important;
+    max-width: calc(100% - var(--hf-sidebar-width)) !important;
+}
+
+/* Desktop/tablet sizing -------------------------------------------------- */
+@media (max-width: 1199.98px) and (min-width: 992px) {
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+        padding-left: 350px !important;
+    }
+
+    .hf-topbar-start {
+        width: min(320px, calc(100% - 350px));
+    }
+
+    .hf-global-search-shortcut {
+        display: none;
+    }
+
+    body:not(.hf-hisabflow-home) .o_web_client > header.o_navbar .o_menu_sections :is(
+        .o_nav_entry,
+        .dropdown-toggle
+    ) {
+        padding-inline: 7px !important;
+        font-size: 12px;
+    }
+}
+
+/* On tablets/mobile, use Odoo's native app menu and give the full viewport
+ * back to the standard webclient. */
+@media (max-width: 991.98px) {
+    .hf-sidebar,
+    .hf-topbar-start {
+        display: none !important;
+    }
+
+    .o_web_client {
+        --hf-current-sidebar-width: 0px !important;
+    }
+
+    .o_web_client > header.o_navbar,
+    .o_web_client > .o_action_manager,
+    body.hf-sidebar-is-collapsed .o_web_client > header.o_navbar,
+    body.hf-sidebar-is-collapsed .o_web_client > .o_action_manager,
+    body.hf-sidebar-has-submenu .o_web_client > header.o_navbar,
+    body.hf-sidebar-has-submenu .o_web_client > .o_action_manager {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .o_web_client > header.o_navbar {
+        height: auto;
+        min-height: 46px;
+    }
+
+    .o_web_client > header.o_navbar .o_main_navbar,
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+        height: auto !important;
+        min-height: 46px;
+        padding: 0 !important;
+    }
+
+    .o_web_client > header.o_navbar .o_main_navbar > .o_menu_toggle,
+    .o_web_client > header.o_navbar .o_main_navbar > .o_menu_brand,
+    .o_web_client > header.o_navbar .o_main_navbar > .o_menu_sections,
+    .o_web_client > header.o_navbar .o_main_navbar > .o_navbar_apps_menu,
+    .o_web_client > header.o_navbar .o_main_navbar > .o_nav_entry {
+        display: flex !important;
+    }
+}
+
+/* HisabFlow dashboard navbar hard-cleanup (v19.0.1.5.12) -----------------
+ * Desktop only: the dashboard provides its own hamburger + global search.
+ * Hide Odoo's native app brand/breadcrumb/section elements behind it while
+ * keeping the systray. Mobile keeps Odoo's standard responsive navbar.
+ */
+@media (min-width: 992px) {
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar > :not(.o_menu_systray) {
+        display: none !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar > .o_menu_systray {
+        display: flex !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar > .hf-topbar-start {
+        display: flex !important;
+        z-index: 20;
+    }
+}
+
+/* HisabFlow dashboard topbar refinement (v19.0.1.5.13) -------------------
+ * Dashboard desktop header intentionally shows only:
+ *     Overview    [ Search anything... ]                  [native systray]
+ * The old custom hamburger is removed.  "Overview" is rendered by the
+ * HisabFlow topbar itself so no hidden/native breadcrumb can bleed under the
+ * search field. Other applications keep their normal Odoo section menus.
+ */
+@media (min-width: 1200px) {
+    body.hf-hisabflow-home .o_web_client > header.o_navbar > .hf-topbar-start {
+        left: 18px !important;
+        width: min(560px, calc(100% - 390px)) !important;
+        min-width: 360px !important;
+        gap: 18px !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+        padding-left: 595px !important;
+    }
+}
+
+.hf-dashboard-topbar-title {
+    display: inline-flex;
+    min-width: 0;
+    flex: 0 0 auto;
+    align-items: center;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+body.hf-hisabflow-home .hf-global-search {
+    max-width: 490px;
+}
+
+/* There is no hamburger in the 1.5.13 template; keep this guard for stale
+ * cached templates during a rolling asset update. */
+body.hf-hisabflow-home .hf-sidebar-toggle {
+    display: none !important;
+}
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+    body.hf-hisabflow-home .o_web_client > header.o_navbar > .hf-topbar-start {
+        left: 14px !important;
+        width: min(430px, calc(100% - 330px)) !important;
+        min-width: 300px !important;
+        gap: 14px !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+        padding-left: 460px !important;
+    }
+
+    body.hf-hisabflow-home .hf-global-search {
+        max-width: none;
+    }
+}
+
+/* HisabFlow dashboard topbar final layout (v19.0.1.5.14) -----------------
+ * Use Odoo's OWN single "Overview" section and place the custom global search
+ * next to it in normal flex flow.  No absolute overlay, no custom duplicate
+ * Overview label and no hamburger on desktop.
+ */
+@media (min-width: 992px) {
+    /* Neutralize the old absolute topbar container if stale QWeb assets from a
+     * previous version are still present for one reload. */
+    body.hf-hisabflow-home .hf-topbar-start,
+    body.hf-hisabflow-home .hf-dashboard-topbar-title,
+    body.hf-hisabflow-home .hf-sidebar-toggle {
+        display: none !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+        display: flex !important;
+        align-items: center !important;
+        padding: 0 14px !important;
+    }
+
+    /* Sidebar already replaces the native app launcher/brand. Breadcrumbs can
+     * also repeat the dashboard action name, so keep them out on dashboard. */
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_navbar_apps_menu,
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_toggle,
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_brand,
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_navbar_breadcrumbs {
+        display: none !important;
+    }
+
+    /* IMPORTANT: unlike 1.5.12/1.5.13, keep the native dashboard sections.
+     * The HisabFlow root has the Overview child, therefore this is the one and
+     * only Overview rendered in the header. */
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_sections {
+        display: flex !important;
+        width: auto !important;
+        min-width: max-content !important;
+        flex: 0 0 auto !important;
+        align-self: stretch !important;
+        align-items: stretch !important;
+        overflow: visible !important;
+        white-space: nowrap !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_sections :is(
+        .o_nav_entry,
+        .dropdown-toggle
+    ) {
+        display: inline-flex !important;
+        height: 100% !important;
+        align-items: center !important;
+        padding-inline: 10px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .hf-dashboard-global-search {
+        position: static !important;
+        display: flex !important;
+        width: min(500px, 38vw) !important;
+        min-width: 280px !important;
+        max-width: 500px !important;
+        flex: 0 1 500px !important;
+        margin-left: 22px !important;
+        margin-right: 14px !important;
+    }
+
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_systray {
+        display: flex !important;
+        margin-left: auto !important;
+    }
+}
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .hf-dashboard-global-search {
+        width: min(380px, 34vw) !important;
+        min-width: 230px !important;
+        margin-left: 16px !important;
+    }
+
+    body.hf-hisabflow-home .hf-global-search-shortcut {
+        display: none !important;
+    }
+}
+
+/* HisabFlow dashboard search placement — right after Overview (v19.0.1.5.19)
+ * v1.5.18 true-centered the search box in the middle of the whole header
+ * using equal flex shares on each side. The client instead wants the search
+ * box sitting right next to "Overview" (normal reading order: Overview,
+ * then Search), not floating in the visual middle of the header. Revert to
+ * normal in-flow placement: "Overview" keeps its own natural width, the
+ * search box follows immediately with a small gap, and the systray is
+ * pushed to the far right by its own margin-left: auto.
+ */
+@media (min-width: 1200px) {
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_main_navbar {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* Left: native "Overview" section keeps its own natural (not stretched)
+     * width, so the search box that follows sits right next to it. */
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_sections {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: max-content !important;
+    }
+
+    /* Middle: the search box, immediately after Overview with a small gap. */
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .hf-dashboard-global-search {
+        position: static !important;
+        flex: 0 0 auto !important;
+        width: min(520px, 34vw) !important;
+        min-width: 360px !important;
+        max-width: 520px !important;
+        margin: 0 0 0 22px !important;
+    }
+
+    /* Right: native systray, pushed to the far right of the navbar. */
+    body.hf-hisabflow-home .o_web_client > header.o_navbar .o_menu_systray {
+        flex: 0 0 auto !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        margin-left: auto !important;
+    }
+}

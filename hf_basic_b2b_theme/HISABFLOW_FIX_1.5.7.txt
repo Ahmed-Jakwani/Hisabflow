@@ -1,0 +1,11 @@
+HisabFlow Dashboard KPI Fix - 19.0.1.5.7
+
+Root cause fixed:
+- Odoo model environments are empty recordsets and therefore evaluate to False.
+- Previous helpers used `if not model` / `if model`, which incorrectly treated every valid model as unavailable.
+- This made KPI sums/counts return 0 and prevented record_count decoration even though drill-down searches returned records.
+
+Fix:
+- Use explicit `model is None` checks in _company_domain, _safe_count, _decorate_metric_counts, _safe_sum, and _safe_records.
+- Company filtering now also applies correctly.
+- KPI amount/count uses the exact drill-down model/domain.

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="hf_login_layout" inherit_id="web.login_layout" name="HisabFlow Basic B2B Login">
+        <xpath expr="//div[hasclass('container') and hasclass('py-5')]" position="replace">
+            <div class="hf-login-shell">
+                <section class="hf-login-left">
+                    <div class="hf-login-brand">
+                        <img src="/hf_basic_b2b_theme/static/src/img/hisabflow-logo.svg" alt="HisabFlow.tech"/>
+                    </div>
+                    <div class="hf-login-form-area">
+                        <div class="hf-login-copy">
+                            <h1>Welcome back</h1>
+                            <p>Sign in to manage sales, inventory, accounting and business operations.</p>
+                        </div>
+                        <div class="hf-login-card">
+                            <t t-out="0"/>
+                        </div>
+                        <p class="hf-login-demo">New to HisabFlow? <a href="https://hisabflow.tech" target="_blank">Request a demo</a></p>
+                    </div>
+                    <div class="hf-login-legal">© 2026 HisabFlow.tech · Smart Hisab for Smart Businesses</div>
+                </section>
+                <section class="hf-login-right">
+                    <div class="hf-login-grid"></div>
+                    <div class="hf-login-right-content">
+                        <div class="hf-login-pill"><i class="fa fa-magic"></i> AI + FBR Compliance</div>
+                        <h2>Automate every invoice.<br/><span>Stay 100% FBR compliant.</span></h2>
+                        <p>From POS billing to real-time e-invoicing and Odoo automation — HisabFlow gives Pakistani businesses a single, intelligent control center.</p>
+                        <div class="hf-login-visual">
+                            <img src="/hf_basic_b2b_theme/static/src/img/auth-visual.jpg" alt="HisabFlow payment and invoicing automation"/>
+                        </div>
+                        <div class="hf-login-benefits">
+                            <div><i class="fa fa-shield"></i><strong>FBR Certified</strong><span>Compliant invoicing</span></div>
+                            <div><i class="fa fa-bolt"></i><strong>Sales Native</strong><span>Live ERP data</span></div>
+                            <div><i class="fa fa-sliders"></i><strong>AI Insights</strong><span>Smarter operations</span></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="hf_login_form_labels" inherit_id="web.login" name="HisabFlow Login Form Labels">
+        <xpath expr="//label[@for='login']" position="replace">
+            <label for="login" class="form-label d-flex justify-content-between">Work email</label>
+        </xpath>
+        <xpath expr="//div[hasclass('oe_login_buttons')]/button[@type='submit'][1]" position="replace">
+            <button type="submit" class="btn btn-primary">Sign in to portal</button>
+        </xpath>
+    </template>
+
+    <!-- Phase 1 deliberately restores Odoo's standard login page. -->
+    <record id="hf_login_layout" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
+    <record id="hf_login_form_labels" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
+</odoo>

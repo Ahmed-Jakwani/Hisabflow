@@ -1,0 +1,35 @@
+HisabFlow Theme 19.0.1.5.18
+============================
+
+Dashboard search — true visual centering fix:
+
+Problem
+-------
+v1.5.16 centered the search box against the navbar's own (uneven) flex
+remainder. v1.5.17 tried again by positioning it with `position: fixed`
+against `100vw minus a hardcoded 215px sidebar width`. Both approaches
+compute a pixel position from assumptions (a fixed sidebar width, a
+specific viewport size) that don't always match the real page — OS display
+scaling, browser zoom, sidebar width changes, or a different number of
+systray icons all shift the true center, so the search box drifted toward
+the systray/right edge instead of sitting in the middle of the visible
+header area.
+
+Fix
+---
+Replaced the pixel-math positioning with the standard 3-column flex
+"holy grail" centering pattern on the dashboard navbar (>= 1200px):
+
+- `.o_menu_sections` (native "Overview" label) and `.o_menu_systray`
+  (native systray icons) are each given an equal `flex: 1 1 0` share of
+  the remaining navbar width, so they always claim identical space no
+  matter their own content width.
+- `.hf-dashboard-global-search` sits between them, back in normal
+  document flow (`position: static`) with a fixed width, no `vw` math and
+  no `position: fixed/absolute` z-index juggling.
+
+Because the two side columns always take equal space, the search box in
+the middle lands in the true visual center of the header — independent of
+sidebar width, browser zoom/display scaling, viewport size, or systray
+icon count. Other apps, mobile/tablet breakpoints (< 1200px) and every
+other part of the dashboard are untouched.

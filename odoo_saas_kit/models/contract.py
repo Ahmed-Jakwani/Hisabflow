@@ -948,11 +948,69 @@ class SaasContract(models.Model):
         for contract in valid_contracts:
             contract.generate_invoice()
 
+    # A single DNS label: letters/digits, inner hyphens allowed, 1-63 chars.
+    # Deliberately excludes "_": an underscore is not a legal DNS label, strict
+    # TLS clients then refuse to wildcard-match the certificate, and
+    # nginx-client-map-update.sh rejects the host outright with its own regex.
+    _SUBDOMAIN_LABEL_RE = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
+
+    # Parents we hold a wildcard certificate for, beyond the bare base domain.
+    # "*.hisabflow.tech" matches exactly ONE label, so "foo.demo.hisabflow.tech"
+    # is only covered because "*.demo.hisabflow.tech" is a SAN on the cert.
+    # Override via the ir.config_parameter of the same name (comma separated)
+    # after adding the new parent to the certificate.
+    _COVERED_PARENTS_PARAM = "saas_kit.wildcard_covered_parents"
+    _COVERED_PARENTS_DEFAULT = "demo,odoo"
+
+    def _validate_subdomain(self, domain_name):
+        """Reject subdomains that would provision a client with a broken cert.
+
+        Runs on create *and* write - it previously only ran on write, so a
+        contract created with a bad domain_name in a single call skipped every
+        check and only failed later, at nginx/TLS time.
+        """
+        if not domain_name:
+            return
+
+        labels = domain_name.split(".")
+        for label in labels:
+            if not self._SUBDOMAIN_LABEL_RE.match(label):
+                raise UserError(_(
+                    "'%s' is not a valid subdomain. Use only letters, digits and "
+                    "hyphens (no underscores, no spaces), and do not start or end "
+                    "a part with a hyphen."
+                ) % domain_name)
+
+        # More than one label means we need a wildcard for the parent.
+        if len(labels) > 1:
+            parent = ".".join(labels[1:])
+            covered = self.env["ir.config_parameter"].sudo().get_param(
+                self._COVERED_PARENTS_PARAM, self._COVERED_PARENTS_DEFAULT
+            )
+            allowed = {p.strip().lower() for p in covered.split(",") if p.strip()}
+            if parent.lower() not in allowed:
+                raise UserError(_(
+                    "Subdomain '%(domain)s' would be served over HTTPS by the "
+                    "wildcard certificate for *.%(base)s, which only covers a "
+                    "single label - visitors would get a certificate warning.\n\n"
+                    "Either use a single-label subdomain (for example "
+                    "'%(flat)s'), or add a '*.%(parent)s.%(base)s' wildcard to "
+                    "the certificate and then append '%(parent)s' to the "
+                    "'%(param)s' system parameter."
+                ) % {
+                    "domain": domain_name,
+                    "base": "hisabflow.tech",
+                    "flat": "-".join(labels),
+                    "parent": parent,
+                    "param": self._COVERED_PARENTS_PARAM,
+                })
+
     @api.model_create_multi
     def create(self, vals_list):
         """Create contracts using Odoo 19's batch-create API."""
         for vals in vals_list:
             vals['name'] = self.env['ir.sequence'].next_by_code('saas.contract')
+            self._validate_subdomain(vals.get('domain_name'))
 
         contracts = super().create(vals_list)
         for contract in contracts:
@@ -987,13 +1045,11 @@ class SaasContract(models.Model):
             if vals.get('active')==False:
                 if obj.state != 'cancel':
                     raise UserError("Please cancel the SaaS contract before archiving it.")
-        if vals.get('domain_name'):
-            if(vals.get('domain_name')[0]=='-' or vals.get('domain_name')[0]=='_'):
-                raise UserError("Please enter a valid domain name.")
-            regex = r"([a-zA-Z0-9_.-]+)"
-            match = re.fullmatch(regex, vals.get('domain_name'))
-            if match == None:
-                raise UserError("Please enter domain name in only [a-zA-Z0-9] or [a-zA-Z0-9_.-] format with no blank spaces.")
+        # Was a permissive [a-zA-Z0-9_.-]+ check that accepted underscores (not
+        # legal in DNS, and rejected by nginx-client-map-update.sh) and any
+        # depth of dots (which silently produced clients outside the wildcard
+        # certificate). _validate_subdomain covers both, and also runs on create.
+        self._validate_subdomain(vals.get('domain_name'))
         return super(SaasContract, self).write(vals)
     
     def unlink(self):

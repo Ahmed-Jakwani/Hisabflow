@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="hf_web_layout_brand" inherit_id="web.layout" name="HisabFlow Layout Brand">
+        <xpath expr="//title" position="replace">
+            <title>HisabFlow.tech — Smart Hisab for Smart Businesses</title>
+        </xpath>
+        <xpath expr="//link[@rel='shortcut icon']" position="attributes">
+            <attribute name="t-att-href">'/hf_basic_b2b_theme/static/src/img/favicon.svg'</attribute>
+        </xpath>
+    </template>
+
+    <template id="hf_webclient_theme_color" inherit_id="web.webclient_bootstrap" name="HisabFlow Webclient Theme Color">
+        <xpath expr="//meta[@name='theme-color']" position="attributes">
+            <attribute name="content">#017B82</attribute>
+        </xpath>
+    </template>
+</odoo>

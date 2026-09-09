@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="hf_basic_b2b_theme.Dashboard" owl="1">
+        <div class="hf-dashboard-client">
+            <div t-if="state.loading" class="hf-dashboard-loading">
+                <div class="hf-dashboard-spinner"></div>
+                <strong>Loading live business data…</strong>
+                <span>HisabFlow is preparing your dashboard.</span>
+            </div>
+
+            <div t-elif="state.error" class="hf-dashboard-error">
+                <i class="fa fa-exclamation-triangle"></i>
+                <h3>Dashboard unavailable</h3>
+                <p t-esc="state.error"/>
+                <button type="button" class="btn btn-primary" t-on-click="loadData">Try again</button>
+            </div>
+
+            <div t-else="" class="hf-dashboard-page">
+                <t t-call="hf_basic_b2b_theme.DashboardHeader"/>
+
+                <t t-if="state.data.kind !== 'receipt'">
+                    <t t-call="hf_basic_b2b_theme.KpiCards"/>
+                </t>
+
+                <t t-if="state.data.kind === 'overview'">
+                    <t t-call="hf_basic_b2b_theme.OverviewDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'sales'">
+                    <t t-call="hf_basic_b2b_theme.SalesDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'purchases'">
+                    <t t-call="hf_basic_b2b_theme.PurchaseDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'inventory'">
+                    <t t-call="hf_basic_b2b_theme.InventoryDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'accounting'">
+                    <t t-call="hf_basic_b2b_theme.AccountingDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'manufacturing'">
+                    <t t-call="hf_basic_b2b_theme.ManufacturingDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'pos'">
+                    <t t-call="hf_basic_b2b_theme.PosDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'kitchen'">
+                    <t t-call="hf_basic_b2b_theme.KitchenDashboard"/>
+                </t>
+                <t t-elif="state.data.kind === 'receipt'">
+                    <t t-call="hf_basic_b2b_theme.ReceiptDashboard"/>
+                </t>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.DashboardHeader">
+        <header class="hf-dashboard-header">
+            <div>
+                <div class="hf-dashboard-heading-row">
+                    <h1 t-if="state.data.kind === 'overview'">Assalam-o-Alaikum, <t t-esc="state.data.user"/> 👋</h1>
+                    <h1 t-else="" t-esc="state.data.title"/>
+                    <span class="hf-live-badge"><i></i> Live data</span>
+                </div>
+                <p t-if="state.data.kind === 'overview'">Here is what is happening across <strong t-esc="state.data.company"/> for the selected period.</p>
+                <p t-else="" t-esc="state.data.subtitle"/>
+            </div>
+            <div class="hf-dashboard-tools">
+                <span t-if="state.data.kind === 'overview'" class="hf-fbr-badge"><i class="fa fa-check-circle"></i> FBR IRIS Online</span>
+                <div class="hf-dashboard-filters">
+                    <label>
+                        <span>From</span>
+                        <input type="date" t-att-value="state.dateFrom" t-on-change="onDateFromChange"/>
+                    </label>
+                    <label>
+                        <span>To</span>
+                        <input type="date" t-att-value="state.dateTo" t-on-change="onDateToChange"/>
+                    </label>
+                    <button type="button" class="hf-filter-button" t-on-click="applyDateFilter">
+                        <i class="fa fa-filter"></i> Apply
+                    </button>
+                    <button type="button" class="hf-refresh-button" t-on-click="loadData" title="Refresh dashboard">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.KpiCards">
+        <section class="hf-kpi-grid" t-att-class="'hf-kpi-grid hf-kpi-grid--' + state.data.kpis.length">
+            <article t-foreach="state.data.kpis"
+                     t-as="kpi"
+                     t-key="kpi.label"
+                     t-att-class="'hf-kpi-card hf-tone-' + kpi.tone + (kpi.action ? ' is-clickable' : '')"
+                     t-att-role="kpi.action ? 'button' : false"
+                     t-att-tabindex="kpi.action ? '0' : false"
+                     t-att-title="kpi.action ? 'Open ' + kpi.label + ' records' : false"
+                     t-on-click="() => openMetric(kpi)"
+                     t-on-keydown="(ev) => onMetricKeydown(ev, kpi)">
+                <div class="hf-kpi-icon"><i t-att-class="'fa ' + kpi.icon"></i></div>
+                <div class="hf-kpi-copy">
+                    <span class="hf-kpi-label" t-esc="kpi.label"/>
+                    <strong t-esc="formatValue(kpi.value, kpi.type)"/>
+                    <small>
+                        <i class="fa fa-database"></i>
+                        <t t-if="kpi.record_count !== undefined and kpi.type !== 'number'">
+                            <t t-esc="kpi.record_count"/> records ·
+                        </t>
+                        <t t-esc="kpi.hint"/>
+                    </small>
+                </div>
+                <span t-if="kpi.action" class="hf-kpi-open"><i class="fa fa-arrow-right"/></span>
+            </article>
+        </section>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.TrendLineCard">
+        <section class="hf-panel hf-trend-line-panel">
+            <div class="hf-panel-header">
+                <div>
+                    <h3 t-esc="trendTitle"/>
+                    <span t-esc="trendSubtitle"/>
+                </div>
+                <div class="hf-chart-legend">
+                    <span><i class="hf-legend-dot hf-legend-primary"></i><t t-esc="primaryLabel"/></span>
+                    <span t-if="secondaryLabel"><i class="hf-legend-dot hf-legend-secondary"></i><t t-esc="secondaryLabel"/></span>
+                </div>
+            </div>
+            <div t-if="state.data.trend.length" class="hf-line-chart">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Trend chart">
+                    <defs>
+                        <linearGradient id="hfTrendArea" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stop-color="#11a8a4" stop-opacity="0.28"/>
+                            <stop offset="100%" stop-color="#11a8a4" stop-opacity="0.02"/>
+                        </linearGradient>
+                    </defs>
+                    <line x1="0" y1="20" x2="100" y2="20" class="hf-grid-line"/>
+                    <line x1="0" y1="40" x2="100" y2="40" class="hf-grid-line"/>
+                    <line x1="0" y1="60" x2="100" y2="60" class="hf-grid-line"/>
+                    <line x1="0" y1="80" x2="100" y2="80" class="hf-grid-line"/>
+                    <polygon t-att-points="areaPoints('primary')" fill="url(#hfTrendArea)"/>
+                    <polyline t-att-points="linePoints('primary')" class="hf-line-primary"/>
+                    <polyline t-if="secondaryLabel" t-att-points="linePoints('secondary')" class="hf-line-secondary"/>
+                </svg>
+                <div class="hf-line-labels">
+                    <span t-foreach="state.data.trend" t-as="point" t-key="point.label" t-esc="point.label"/>
+                </div>
+            </div>
+            <div t-else="" class="hf-empty-chart"><i class="fa fa-line-chart"></i><span t-esc="state.data.empty_message"/></div>
+        </section>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.TrendBarCard">
+        <section class="hf-panel hf-bar-panel">
+            <div class="hf-panel-header">
+                <div><h3 t-esc="trendTitle"/><span t-esc="trendSubtitle"/></div>
+                <div class="hf-chart-legend">
+                    <span><i class="hf-legend-dot hf-legend-primary"></i><t t-esc="primaryLabel"/></span>
+                    <span t-if="secondaryLabel"><i class="hf-legend-dot hf-legend-secondary"></i><t t-esc="secondaryLabel"/></span>
+                </div>
+            </div>
+            <div t-if="state.data.trend.length" class="hf-bar-chart">
+                <div t-foreach="state.data.trend" t-as="row" t-key="row.label" class="hf-bar-column">
+                    <div class="hf-bar-stage">
+                        <div class="hf-bar hf-bar-primary" t-att-style="barHeight(row, 'primary')" t-att-title="formatValue(row.primary, 'currency')"></div>
+                        <div t-if="secondaryLabel" class="hf-bar hf-bar-secondary" t-att-style="barHeight(row, 'secondary')" t-att-title="formatValue(row.secondary, 'currency')"></div>
+                    </div>
+                    <span t-esc="row.label"/>
+                </div>
+            </div>
+            <div t-else="" class="hf-empty-chart"><i class="fa fa-bar-chart"></i><span t-esc="state.data.empty_message"/></div>
+        </section>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.QuickActions">
+        <section class="hf-panel hf-quick-panel">
+            <div class="hf-panel-header"><div><h3>Quick Actions</h3><span>Open frequently used business areas</span></div></div>
+            <div class="hf-quick-grid">
+                <button t-foreach="state.data.quick_actions" t-as="item" t-key="item.label" type="button" t-on-click="() => runQuickAction(item)">
+                    <span><i t-att-class="'fa ' + item.icon"></i></span>
+                    <strong t-esc="item.label"/>
+                </button>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.GenericTransactionsTable">
+        <section class="hf-panel hf-table-panel">
+            <div class="hf-panel-header">
+                <div><h3 t-esc="tableTitle"/><span t-esc="tableSubtitle"/></div>
+                <button type="button" class="hf-view-all" t-on-click="() => openAllRecords(tableApp)">View All <i class="fa fa-arrow-right"></i></button>
+            </div>
+            <div class="hf-table-scroll">
+                <table class="hf-data-table">
+                    <thead><tr><th>Reference</th><th>Partner / Source</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.data.rows" t-as="row" t-key="row.model + '-' + row.id" t-on-click="() => openRecord(row)">
+                            <td><strong t-esc="row.name"/><small t-if="row.source" t-esc="row.source"/></td>
+                            <td t-esc="row.partner || row.product || row.location || '—'"/>
+                            <td t-esc="formatDate(row.date)"/>
+                            <td class="hf-amount" t-esc="formatValue(row.amount || row.quantity, row.amount !== undefined ? 'currency' : 'number')"/>
+                            <td><span t-att-class="'hf-status hf-status-' + row.tone" t-esc="row.status"/></td>
+                            <td><button type="button" class="hf-row-open"><i class="fa fa-eye"></i></button></td>
+                        </tr>
+                        <tr t-if="!state.data.rows.length"><td colspan="6" class="hf-empty-row" t-esc="state.data.empty_message"/></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.OverviewDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--overview">
+            <t t-set="trendTitle" t-value="'Sales vs Purchases'"/>
+            <t t-set="trendSubtitle" t-value="'Business movement for the selected period'"/>
+            <t t-set="primaryLabel" t-value="'Sales'"/>
+            <t t-set="secondaryLabel" t-value="'Purchases'"/>
+            <t t-call="hf_basic_b2b_theme.TrendLineCard"/>
+
+            <section class="hf-panel hf-snapshot-panel">
+                <div class="hf-panel-header"><div><h3>Business Snapshot</h3><span>Current company overview</span></div></div>
+                <div class="hf-snapshot-list">
+                    <div t-foreach="state.data.summary"
+                         t-as="item"
+                         t-key="item.label"
+                         t-att-class="item.action ? 'is-clickable' : ''"
+                         t-att-role="item.action ? 'button' : false"
+                         t-att-tabindex="item.action ? '0' : false"
+                         t-on-click="() => openMetric(item)"
+                         t-on-keydown="(ev) => onMetricKeydown(ev, item)">
+                        <span t-esc="item.label"/>
+                        <strong t-esc="formatValue(item.value, item.type)"/>
+                        <i t-att-class="'hf-status-dot hf-dot-' + item.tone"></i>
+                        <i t-if="item.action" class="fa fa-angle-right hf-snapshot-open"></i>
+                    </div>
+                </div>
+                <div class="hf-help-card">
+                    <div><i class="fa fa-headphones"></i></div>
+                    <strong>Need Help?</strong>
+                    <span>Contact HisabFlow support for onboarding and configuration.</span>
+                    <a href="https://hisabflow.tech" target="_blank">Open Help Center <i class="fa fa-arrow-right"></i></a>
+                </div>
+            </section>
+        </div>
+        <div class="hf-dashboard-grid hf-dashboard-grid--bottom">
+            <div>
+                <t t-set="tableTitle" t-value="'Recent Business Activity'"/>
+                <t t-set="tableSubtitle" t-value="'Latest sales, purchases, invoices and bills'"/>
+                <t t-set="tableApp" t-value="'HisabFlow'"/>
+                <t t-call="hf_basic_b2b_theme.GenericTransactionsTable"/>
+            </div>
+            <t t-call="hf_basic_b2b_theme.QuickActions"/>
+        </div>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.SalesDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--sales">
+            <section class="hf-panel hf-pipeline-panel">
+                <div class="hf-panel-header"><div><h3>Sales Pipeline</h3><span>Order value by stage</span></div></div>
+                <div class="hf-pipeline-list">
+                    <div t-foreach="state.data.pipeline"
+                         t-as="stage"
+                         t-key="stage.label"
+                         t-att-class="'hf-pipeline-stage hf-stage-' + stage.tone + (stage.action ? ' is-clickable' : '')"
+                         t-att-role="stage.action ? 'button' : false"
+                         t-att-tabindex="stage.action ? '0' : false"
+                         t-on-click="() => openMetric(stage)"
+                         t-on-keydown="(ev) => onMetricKeydown(ev, stage)">
+                        <span t-esc="stage.label"/>
+                        <strong t-esc="formatValue(stage.value, 'currency')"/>
+                        <small><t t-esc="stage.count"/> records</small>
+                    </div>
+                </div>
+                <div class="hf-pipeline-total">
+                    <span>Total Pipeline Value</span>
+                    <strong t-esc="formatValue(state.data.pipeline.reduce((sum, item) => sum + item.value, 0), 'currency')"/>
+                </div>
+            </section>
+            <t t-set="trendTitle" t-value="'Revenue Trend'"/>
+            <t t-set="trendSubtitle" t-value="'Confirmed sales and tax movement'"/>
+            <t t-set="primaryLabel" t-value="'Revenue'"/>
+            <t t-set="secondaryLabel" t-value="'Tax'"/>
+            <t t-call="hf_basic_b2b_theme.TrendLineCard"/>
+        </div>
+        <t t-set="tableTitle" t-value="'Recent Quotations &amp; Sales Orders'"/>
+        <t t-set="tableSubtitle" t-value="'Latest sales documents across the current company'"/>
+        <t t-set="tableApp" t-value="'Sales'"/>
+        <t t-call="hf_basic_b2b_theme.GenericTransactionsTable"/>
+        <t t-call="hf_basic_b2b_theme.QuickActions"/>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.PurchaseDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--purchase">
+            <section class="hf-panel hf-supplier-panel">
+                <div class="hf-panel-header"><div><h3>Supplier Summary</h3><span>Top suppliers by purchase value</span></div></div>
+                <div class="hf-supplier-list">
+                    <div t-foreach="state.data.suppliers" t-as="supplier" t-key="supplier.name">
+                        <span class="hf-supplier-avatar" t-esc="supplier.name.substring(0, 2).toUpperCase()"/>
+                        <div><strong t-esc="supplier.name"/><small><t t-esc="supplier.orders"/> purchase orders</small></div>
+                        <b t-esc="formatValue(supplier.amount, 'currency')"/>
+                    </div>
+                    <div t-if="!state.data.suppliers.length" class="hf-empty-mini" t-esc="state.data.empty_message"/>
+                </div>
+                <t t-call="hf_basic_b2b_theme.QuickActions"/>
+            </section>
+            <div>
+                <t t-set="tableTitle" t-value="'Recent Purchase Orders'"/>
+                <t t-set="tableSubtitle" t-value="'Latest RFQs and confirmed purchase orders'"/>
+                <t t-set="tableApp" t-value="'Purchase'"/>
+                <t t-call="hf_basic_b2b_theme.GenericTransactionsTable"/>
+            </div>
+        </div>
+        <t t-set="trendTitle" t-value="'Procurement Trend'"/>
+        <t t-set="trendSubtitle" t-value="'Purchase order value during the selected period'"/>
+        <t t-set="primaryLabel" t-value="'Total Purchases'"/>
+        <t t-set="secondaryLabel" t-value="false"/>
+        <t t-call="hf_basic_b2b_theme.TrendLineCard"/>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.InventoryDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--inventory-top">
+            <section class="hf-panel hf-location-panel">
+                <div class="hf-panel-header"><div><h3>Warehouse Locations</h3><span>Stock position by internal location</span></div></div>
+                <div class="hf-location-table">
+                    <div class="hf-location-head"><span>Location</span><span>Status</span><span>On Hand</span></div>
+                    <div t-foreach="state.data.locations" t-as="location" t-key="location.name">
+                        <strong t-esc="location.name"/>
+                        <span t-att-class="'hf-status hf-status-' + location.tone" t-esc="location.status"/>
+                        <b t-esc="formatValue(location.on_hand)"/>
+                    </div>
+                    <div t-if="!state.data.locations.length" class="hf-empty-mini" t-esc="state.data.empty_message"/>
+                </div>
+                <button type="button" class="hf-panel-action" t-on-click="() => openApp('Inventory')">Manage Locations</button>
+            </section>
+
+            <section class="hf-panel hf-valuation-panel">
+                <div class="hf-panel-header"><div><h3>Stock Distribution</h3><span>On-hand quantity by product category</span></div></div>
+                <div class="hf-donut-wrap">
+                    <div class="hf-donut" t-att-style="donutStyle(state.data.categories)"><span><strong t-esc="formatValue(state.data.kpis[0].value)"/>Units</span></div>
+                    <div class="hf-donut-legend">
+                        <div t-foreach="state.data.categories" t-as="category" t-key="category.name">
+                            <i></i><span t-esc="category.name"/><strong><t t-esc="category.percentage"/>%</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <t t-set="trendTitle" t-value="'Inventory Movement'"/>
+            <t t-set="trendSubtitle" t-value="'Incoming versus outgoing stock units'"/>
+            <t t-set="primaryLabel" t-value="'In'"/>
+            <t t-set="secondaryLabel" t-value="'Out'"/>
+            <t t-call="hf_basic_b2b_theme.TrendBarCard"/>
+        </div>
+
+        <section class="hf-panel hf-table-panel">
+            <div class="hf-panel-header">
+                <div><h3>Products</h3><span>Top products by current on-hand quantity</span></div>
+                <button type="button" class="hf-view-all" t-on-click="() => openApp('Inventory')">View Inventory <i class="fa fa-arrow-right"></i></button>
+            </div>
+            <div class="hf-table-scroll">
+                <table class="hf-data-table">
+                    <thead><tr><th>Product</th><th>Category</th><th>On Hand</th><th>Reserved</th><th>Available</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.data.rows" t-as="row" t-key="row.id" t-on-click="() => openRecord(row)">
+                            <td><strong t-esc="row.name"/></td><td t-esc="row.category"/>
+                            <td t-esc="formatValue(row.on_hand)"/><td t-esc="formatValue(row.reserved)"/><td t-esc="formatValue(row.available)"/>
+                            <td><span t-att-class="'hf-status hf-status-' + row.tone" t-esc="row.status"/></td>
+                            <td><button type="button" class="hf-row-open"><i class="fa fa-ellipsis-v"></i></button></td>
+                        </tr>
+                        <tr t-if="!state.data.rows.length"><td colspan="7" class="hf-empty-row" t-esc="state.data.empty_message"/></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <t t-call="hf_basic_b2b_theme.QuickActions"/>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.AccountingDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--accounting">
+            <t t-set="trendTitle" t-value="'Income vs Expense'"/>
+            <t t-set="trendSubtitle" t-value="'Posted accounting entries for the selected period'"/>
+            <t t-set="primaryLabel" t-value="'Income'"/>
+            <t t-set="secondaryLabel" t-value="'Expense'"/>
+            <t t-call="hf_basic_b2b_theme.TrendBarCard"/>
+
+            <t t-set="trendTitle" t-value="'Cash Flow'"/>
+            <t t-set="trendSubtitle" t-value="'Income movement compared with expenses'"/>
+            <t t-set="primaryLabel" t-value="'Cash Inflow'"/>
+            <t t-set="secondaryLabel" t-value="'Cash Outflow'"/>
+            <t t-call="hf_basic_b2b_theme.TrendLineCard"/>
+
+            <section class="hf-panel hf-aged-panel">
+                <div class="hf-panel-header"><div><h3>Aged Receivables</h3><span>Open customer invoices by overdue bucket</span></div></div>
+                <div class="hf-aged-total" t-esc="formatValue(state.data.kpis[1].value, 'currency')"/>
+                <div class="hf-aged-list">
+                    <div t-foreach="state.data.aged" t-as="bucket" t-key="bucket.label">
+                        <i t-att-class="'hf-status-dot hf-dot-' + bucket.tone"></i>
+                        <span t-esc="bucket.label"/>
+                        <strong t-esc="formatValue(bucket.value, 'currency')"/>
+                        <small><t t-esc="bucket.percentage"/>%</small>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="hf-dashboard-grid hf-dashboard-grid--bottom">
+            <div>
+                <t t-set="tableTitle" t-value="'Recent Invoices &amp; Bills'"/>
+                <t t-set="tableSubtitle" t-value="'Latest customer and vendor accounting documents'"/>
+                <t t-set="tableApp" t-value="'Accounting'"/>
+                <t t-call="hf_basic_b2b_theme.GenericTransactionsTable"/>
+            </div>
+            <t t-call="hf_basic_b2b_theme.QuickActions"/>
+        </div>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.ManufacturingDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--manufacturing-top">
+            <section class="hf-panel hf-planning-panel">
+                <div class="hf-panel-header"><div><h3>Production Planning</h3><span>Recent manufacturing orders shown as a visual schedule</span></div></div>
+                <div class="hf-planning-chart">
+                    <div t-foreach="state.data.planning" t-as="row" t-key="row.id" class="hf-planning-row">
+                        <span t-esc="row.product"/>
+                        <button type="button" t-att-class="'hf-planning-bar hf-plan-' + row.tone" t-att-style="planningStyle(row_index, row)" t-on-click="() => openRecord(row)">
+                            <strong t-esc="row.name"/><small><t t-esc="formatValue(row.quantity)"/> <t t-esc="row.uom"/></small>
+                        </button>
+                    </div>
+                    <div t-if="!state.data.planning.length" class="hf-empty-chart"><i class="fa fa-calendar"></i><span t-esc="state.data.empty_message"/></div>
+                </div>
+            </section>
+
+            <section class="hf-panel hf-bom-panel">
+                <div class="hf-panel-header"><div><h3>Bill of Materials Summary</h3><span>Most recently updated BOM</span></div></div>
+                <div t-if="state.data.bom.id" class="hf-bom-card" t-on-click="() => openRecord(state.data.bom)">
+                    <div class="hf-bom-visual"><i class="fa fa-cogs"></i></div>
+                    <strong t-esc="state.data.bom.name"/>
+                    <span t-esc="state.data.bom.product"/>
+                    <div><small>Quantity</small><b><t t-esc="formatValue(state.data.bom.quantity)"/> <t t-esc="state.data.bom.uom"/></b></div>
+                    <div><small>Components</small><b t-esc="state.data.bom.components"/></div>
+                    <button type="button">View Full BOM <i class="fa fa-arrow-right"></i></button>
+                </div>
+                <div t-else="" class="hf-empty-chart"><i class="fa fa-sitemap"></i><span>No bill of materials found.</span></div>
+            </section>
+        </div>
+
+        <div class="hf-dashboard-grid hf-dashboard-grid--manufacturing-mid">
+            <section class="hf-panel hf-status-panel">
+                <div class="hf-panel-header"><div><h3>Work Order Status</h3><span>Manufacturing orders by status</span></div></div>
+                <div class="hf-status-card-grid">
+                    <div t-foreach="state.data.statuses"
+                         t-as="item"
+                         t-key="item.label"
+                         t-att-class="'hf-status-count hf-count-' + item.tone + (item.action ? ' is-clickable' : '')"
+                         t-att-role="item.action ? 'button' : false"
+                         t-att-tabindex="item.action ? '0' : false"
+                         t-on-click="() => openMetric(item)"
+                         t-on-keydown="(ev) => onMetricKeydown(ev, item)">
+                        <span t-esc="item.label"/><strong t-esc="item.count"/><i class="fa fa-circle-o"></i>
+                    </div>
+                </div>
+            </section>
+            <t t-call="hf_basic_b2b_theme.QuickActions"/>
+        </div>
+
+        <section class="hf-panel hf-table-panel">
+            <div class="hf-panel-header"><div><h3>Manufacturing Orders</h3><span>Latest production orders</span></div><button type="button" class="hf-view-all" t-on-click="() => openApp('Manufacturing')">View All <i class="fa fa-arrow-right"></i></button></div>
+            <div class="hf-table-scroll"><table class="hf-data-table"><thead><tr><th>MO Number</th><th>Product</th><th>Quantity</th><th>Planned Date</th><th>Due Date</th><th>Status</th><th></th></tr></thead><tbody>
+                <tr t-foreach="state.data.rows" t-as="row" t-key="row.id" t-on-click="() => openRecord(row)">
+                    <td><strong t-esc="row.name"/></td><td t-esc="row.product"/><td><t t-esc="formatValue(row.quantity)"/> <t t-esc="row.uom"/></td><td t-esc="formatDate(row.date)"/><td t-esc="formatDate(row.due_date)"/>
+                    <td><span t-att-class="'hf-status hf-status-' + row.tone" t-esc="row.status"/></td><td><button type="button" class="hf-row-open"><i class="fa fa-ellipsis-v"></i></button></td>
+                </tr>
+                <tr t-if="!state.data.rows.length"><td colspan="7" class="hf-empty-row" t-esc="state.data.empty_message"/></tr>
+            </tbody></table></div>
+        </section>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.PosDashboard">
+        <div class="hf-dashboard-grid hf-dashboard-grid--pos">
+            <t t-set="trendTitle" t-value="'POS Sales Trend'"/>
+            <t t-set="trendSubtitle" t-value="'Paid orders and sales tax'"/>
+            <t t-set="primaryLabel" t-value="'Sales'"/>
+            <t t-set="secondaryLabel" t-value="'Tax'"/>
+            <t t-call="hf_basic_b2b_theme.TrendLineCard"/>
+
+            <section class="hf-panel hf-payment-panel">
+                <div class="hf-panel-header"><div><h3>Payment Methods</h3><span>Collected amount by payment method</span></div></div>
+                <div class="hf-payment-list">
+                    <div t-foreach="state.data.payments" t-as="payment" t-key="payment.name">
+                        <span><i class="fa fa-credit-card"></i><t t-esc="payment.name"/></span>
+                        <strong t-esc="formatValue(payment.value, 'currency')"/>
+                    </div>
+                    <div t-if="!state.data.payments.length" class="hf-empty-mini" t-esc="state.data.empty_message"/>
+                </div>
+                <t t-call="hf_basic_b2b_theme.QuickActions"/>
+            </section>
+        </div>
+        <t t-set="tableTitle" t-value="'Recent POS Orders'"/>
+        <t t-set="tableSubtitle" t-value="'Latest orders across all POS configurations'"/>
+        <t t-set="tableApp" t-value="'Point of Sale'"/>
+        <t t-call="hf_basic_b2b_theme.GenericTransactionsTable"/>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.KitchenDashboard">
+        <div class="hf-kitchen-toolbar">
+            <button type="button" t-att-class="state.kitchenFilter === 'all' ? 'is-active' : ''" t-on-click="() => setKitchenFilter('all')">All <span t-esc="kitchenCount('all')"/></button>
+            <button type="button" t-att-class="state.kitchenFilter === 'new' ? 'is-active' : ''" t-on-click="() => setKitchenFilter('new')">New <span t-esc="kitchenCount('new')"/></button>
+            <button type="button" t-att-class="state.kitchenFilter === 'preparing' ? 'is-active' : ''" t-on-click="() => setKitchenFilter('preparing')">Preparing <span t-esc="kitchenCount('preparing')"/></button>
+            <button type="button" t-att-class="state.kitchenFilter === 'ready' ? 'is-active' : ''" t-on-click="() => setKitchenFilter('ready')">Ready <span t-esc="kitchenCount('ready')"/></button>
+            <button type="button" t-att-class="state.kitchenFilter === 'completed' ? 'is-active' : ''" t-on-click="() => setKitchenFilter('completed')">Completed <span t-esc="kitchenCount('completed')"/></button>
+            <div><i class="fa fa-refresh"></i> Auto refresh <span class="hf-switch is-on"></span></div>
+        </div>
+        <div class="hf-ticket-grid">
+            <article t-foreach="visibleKitchenTickets" t-as="ticket" t-key="ticket.id" t-att-class="'hf-ticket hf-ticket-' + ticket.stage">
+                <header><strong t-esc="ticket.name"/><span t-esc="ticket.elapsed"/><button type="button" t-on-click="() => openRecord(ticket)"><i class="fa fa-ellipsis-v"></i></button></header>
+                <div class="hf-ticket-meta"><span><i class="fa fa-users"></i><t t-esc="ticket.partner"/></span><span t-esc="ticket.table"/></div>
+                <div class="hf-ticket-lines">
+                    <div t-foreach="ticket.lines" t-as="line" t-key="line_index">
+                        <b t-esc="formatValue(line.qty)"/><span><strong t-esc="line.name"/><small t-if="line.note" t-esc="line.note"/></span>
+                    </div>
+                    <div t-if="!ticket.lines.length" class="hf-empty-mini">Open the POS order to view its lines.</div>
+                </div>
+                <button type="button" class="hf-ticket-action"
+                        t-on-click="() => updateKitchenState(ticket, ticket.stage === 'new' ? 'preparing' : ticket.stage === 'preparing' ? 'ready' : ticket.stage === 'ready' ? 'completed' : false)">
+                    <i class="fa fa-check-circle-o"></i>
+                    <t t-esc="ticket.stage === 'new' ? 'Start Preparing' : ticket.stage === 'preparing' ? 'Mark as Ready' : ticket.stage === 'ready' ? 'Complete Order' : 'View Order'"/>
+                </button>
+            </article>
+            <div t-if="!visibleKitchenTickets.length" class="hf-kitchen-empty"><i class="fa fa-cutlery"></i><strong>No kitchen tickets</strong><span t-esc="state.data.empty_message"/></div>
+        </div>
+        <div class="hf-kitchen-legend"><strong>Legend:</strong><span><i class="hf-ticket-dot new"></i>New</span><span><i class="hf-ticket-dot preparing"></i>Preparing</span><span><i class="hf-ticket-dot ready"></i>Ready</span><span><i class="hf-ticket-dot completed"></i>Completed</span><small><i class="fa fa-refresh"></i> Auto refresh every 15 seconds</small></div>
+    </t>
+
+    <t t-name="hf_basic_b2b_theme.ReceiptDashboard">
+        <div t-if="state.data.receipt.id" class="hf-receipt-shell">
+            <section class="hf-receipt-main">
+                <div class="hf-receipt-logo"><img src="/hf_basic_b2b_theme/static/src/img/hisabflow-logo.svg" alt="HisabFlow"/></div>
+                <div class="hf-receipt-thanks"><h2>Thank you for shopping!</h2><p>We appreciate your business.</p></div>
+                <div class="hf-receipt-order-head"><div><i class="fa fa-shopping-bag"></i><strong>Order Summary</strong></div><span>Order # <b t-esc="state.data.receipt.name"/></span></div>
+                <div class="hf-table-scroll"><table class="hf-receipt-table"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>
+                    <tr t-foreach="state.data.receipt.lines" t-as="line" t-key="line_index"><td><span class="hf-product-thumb"><i class="fa fa-cube"></i></span><strong t-esc="line.name"/></td><td t-esc="formatValue(line.qty)"/><td t-esc="formatValue(line.price, 'currency')"/><td t-esc="formatValue(line.total, 'currency')"/></tr>
+                </tbody></table></div>
+                <div class="hf-receipt-totals"><div><span>Subtotal</span><b t-esc="formatValue(state.data.receipt.subtotal, 'currency')"/></div><div><span>Sales Tax</span><b t-esc="formatValue(state.data.receipt.amount_tax, 'currency')"/></div><div class="grand"><span>Grand Total</span><b t-esc="formatValue(state.data.receipt.amount_total, 'currency')"/></div></div>
+            </section>
+            <aside class="hf-receipt-side">
+                <div class="hf-payment-success"><span><i class="fa fa-check"></i></span><div><strong>Payment Successful!</strong><small>Your payment has been received.</small></div><hr/><small>Amount Paid</small><b t-esc="formatValue(state.data.receipt.amount_paid, 'currency')"/></div>
+                <div class="hf-share-card"><h3>Share Receipt</h3><div><img src="/hf_basic_b2b_theme/static/src/img/qr-placeholder.svg" alt="Receipt QR"/><p><strong>Scan to get receipt</strong><span>Use your phone camera to open the receipt.</span></p></div><div class="hf-share-icons"><i class="fa fa-whatsapp"></i><i class="fa fa-envelope"></i><i class="fa fa-comment"></i></div></div>
+                <div class="hf-loyalty-card"><div><i class="fa fa-gift"></i><strong>Earn More. Save More.</strong><span>Keep shopping and enjoy exclusive rewards!</span></div><p><span><i class="fa fa-star"></i>Loyalty Points Earned</span><b>+<t t-esc="state.data.receipt.loyalty_points"/></b></p></div>
+                <button type="button" class="hf-print-receipt" t-on-click="printReceipt"><i class="fa fa-print"></i> Print Receipt</button>
+            </aside>
+            <footer class="hf-receipt-footer"><div><i class="fa fa-shield"></i><span><strong>Secure Payments</strong>Safe and trusted</span></div><div><i class="fa fa-check-circle"></i><span><strong>Genuine Products</strong>Always top quality</span></div><div><i class="fa fa-cube"></i><span><strong>Easy Returns</strong>Hassle-free process</span></div><div><i class="fa fa-headphones"></i><span><strong>Customer Support</strong>We are here to help</span></div><em>Thank you!</em></footer>
+        </div>
+        <div t-else="" class="hf-dashboard-error"><i class="fa fa-file-text-o"></i><h3>No paid POS order found</h3><p>Create and pay a POS order, then reload this receipt preview.</p><button type="button" class="btn btn-primary" t-on-click="() => openApp('Point of Sale')">Open Point of Sale</button></div>
+    </t>
+</templates>

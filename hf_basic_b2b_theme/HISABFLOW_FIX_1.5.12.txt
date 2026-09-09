@@ -1,0 +1,9 @@
+HisabFlow Basic B2B Theme 19.0.1.5.12
+
+Dashboard topbar cleanup:
+- On the HisabFlow dashboard only, Odoo's native app brand/breadcrumb/section elements are fully hidden.
+- Only the HisabFlow hamburger + global search remain on the left.
+- Odoo systray/company/user controls remain on the right.
+- Sales, Purchase, Inventory, Accounting and all other apps keep their native Odoo top menu sections.
+- Sidebar remains at the compact 215px width from 1.5.10/1.5.11.
+- KPI amount sizing remains clamp(13px, 1.05vw, 17px).
